@@ -179,6 +179,8 @@ end
 
 -- This table specifies which exact format a given type of Tensor should be saved as.
 local fileTypeMap = {
+    ["torch.ByteTensor"] = hdf5.h5t.STD_U8BE,
+    ["torch.CharTensor"] = hdf5.h5t.STD_I8BE,
     ["torch.IntTensor"] = hdf5.h5t.STD_I32BE,
     ["torch.LongTensor"] = hdf5.h5t.STD_I64BE,
     ["torch.FloatTensor"] = hdf5.h5t.IEEE_F32BE,
@@ -191,7 +193,8 @@ end
 
 -- This table tells HDF5 what format to read a given Tensor's data into memory as.
 local nativeTypeMap = {
-    ["torch.ByteTensor"] = hdf5.h5t.NATIVE_CHAR,
+    ["torch.ByteTensor"] = hdf5.h5t.NATIVE_UCHAR,
+    ["torch.CharTensor"] = hdf5.h5t.NATIVE_SCHAR,
     ["torch.IntTensor"] = hdf5.h5t.NATIVE_INT,
     ["torch.LongTensor"] = hdf5.h5t.NATIVE_LONG,
     ["torch.FloatTensor"] = hdf5.h5t.NATIVE_FLOAT,
@@ -201,7 +204,7 @@ local nativeTypeMap = {
 function hdf5._nativeTypeForTensorType(tensorType)
     local nativeType = nativeTypeMap[tensorType]
     if nativeType == nil then
-        error("Cannot find hdf5 native type for " .. typename)
+        error("Cannot find hdf5 native type for " .. tensorType)
     end
     return nativeType
 end

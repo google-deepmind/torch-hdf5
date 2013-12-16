@@ -60,7 +60,7 @@ function HDF5File:close()
 --    print("status: ", status)
 end
 
-function HDF5File:set(datapath, tensor)
+function HDF5File:write(datapath, tensor)
     assert(datapath and type(datapath) == 'string')
     assert(tensor and type(tensor) == 'userdata')
     local components = stringx.split(datapath, "/")
@@ -87,9 +87,6 @@ function HDF5File:set(datapath, tensor)
     if fileDataType == nil then
         error("Cannot find hdf5 file type for " .. typename)
     end
-    -- hdf5.datatypes.H5T_INTEGER
-    -- hdf5.std.H5T_STD_I32BE,
---    print(datatype)
     local datasetID = hdf5.C.H5Dcreate2(
             self._fileID,
             name,
@@ -120,7 +117,7 @@ function HDF5File:set(datapath, tensor)
 --    print("status: ", status)
 end
 
-function HDF5File:get(datapath)
+function HDF5File:read(datapath)
     local datasetID = hdf5.C.H5Dopen2(self._fileID, "/dset", hdf5.H5P_DEFAULT);
     local typeID = hdf5.C.H5Dget_type(datasetID)
     local nativeType = hdf5.C.H5Tget_native_type(typeID, hdf5.C.H5T_DIR_ASCEND)
