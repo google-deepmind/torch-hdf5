@@ -1,0 +1,23 @@
+return {
+    -- filter: pattern or table of patterns; file paths to include
+    --filter = nil,
+
+    -- exclude: pattern or table of patterns; file paths to exclude
+    --exclude = { 'test', 'build' },
+
+    -- tocLevelTopSection: integer; max depth of table of contents for standalone .md docs
+    --tocLevelTopSection = nil,
+
+    -- sectionOrder: table; paths of .md files in order of priority
+    sectionOrder = { "README", "usage" },
+
+    -- packageName: string; override the inferred package namespace
+    packageName = "hdf5",
+
+    -- githubURL: string; $githubUser/$githubProject - used for generating links, if present
+    --githubURL = nil,
+
+    -- section: string; name of the section under which this package should be grouped in the main menu
+    section = "Utilities",
+
+}
