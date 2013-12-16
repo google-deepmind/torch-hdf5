@@ -7,6 +7,7 @@ require 'torchffi'
 --local hdf5lib = ffi.load("/usr/local/lib/libhdf5.dylib")
 local hdf5lib = ffi.load("hdf5")
 hdf5.C = hdf5lib
+
 -- TODO move all this to another file; automate the gcc -E part
 ffi.cdef[[
 typedef signed char __int8_t;
@@ -2011,6 +2012,11 @@ typedef enum H5FD_mpio_collective_opt_t {
  herr_t H5Pset_fapl_stdio(hid_t fapl_id);
 ]]
 
+-- Initialize HDF5
+hdf5.C.H5open()
+hdf5.C.H5check_version(1, 8, 12)
+hdf5.ffi = ffi
+
 --[[
 
 Adding definitions for global constants
@@ -2022,63 +2028,116 @@ local function addConstants(tableName, constantNames, func)
     if not func then
         func = function(x) return x end
     end
-    hdf5[tableName] = { }
+    if not hdf5[tableName] then
+        hdf5[tableName] = { }
+    end
     for _, name in ipairs(constantNames) do
         hdf5[tableName][name] = hdf5.C[func(name)]
     end
 end
 
-addConstants('datatypes', {
-    'H5T_NO_CLASS',
-    'H5T_INTEGER',
-    'H5T_FLOAT',
-    'H5T_TIME',
-    'H5T_STRING',
-    'H5T_BITFIELD',
-    'H5T_OPAQUE',
-    'H5T_COMPOUND',
-    'H5T_REFERENCE',
-    'H5T_ENUM',
-    'H5T_VLEN',
-    'H5T_ARRAY',
-    'H5T_NCLASSES',
-})
-local function addG(x) return x .. "_g" end
+local function addH5t(x) return "H5T_" .. x end
+addConstants('h5t', {
+    'NO_CLASS',
+    'INTEGER',
+    'FLOAT',
+    'TIME',
+    'STRING',
+    'BITFIELD',
+    'OPAQUE',
+    'COMPOUND',
+    'REFERENCE',
+    'ENUM',
+    'VLEN',
+    'ARRAY',
+    'NCLASSES',
+}, addH5t)
+local function addG(x) return addH5t(x) .. "_g" end
 
-addConstants('ieee', {
-    'H5T_IEEE_F32BE',
-    'H5T_IEEE_F32LE',
-    'H5T_IEEE_F64BE',
-    'H5T_IEEE_F64LE',
+addConstants('h5t', {
+    'IEEE_F32BE',
+    'IEEE_F32LE',
+    'IEEE_F64BE',
+    'IEEE_F64LE',
 }, addG)
 
-addConstants('std', {
-    'H5T_STD_I8BE',
-    'H5T_STD_I8LE',
-    'H5T_STD_I16BE',
-    'H5T_STD_I16LE',
-    'H5T_STD_I32BE',
-    'H5T_STD_I32LE',
-    'H5T_STD_I64BE',
-    'H5T_STD_I64LE',
-    'H5T_STD_U8BE',
-    'H5T_STD_U8LE',
-    'H5T_STD_U16BE',
-    'H5T_STD_U16LE',
-    'H5T_STD_U32BE',
-    'H5T_STD_U32LE',
-    'H5T_STD_U64BE',
-    'H5T_STD_U64LE',
-    'H5T_STD_B8BE',
-    'H5T_STD_B8LE',
-    'H5T_STD_B16BE',
-    'H5T_STD_B16LE',
-    'H5T_STD_B32BE',
-    'H5T_STD_B32LE',
-    'H5T_STD_B64BE',
-    'H5T_STD_B64LE',
-    'H5T_STD_REF_OBJ',
-    'H5T_STD_REF_DSETREG',
+addConstants('h5t', {
+    'STD_I8BE',
+    'STD_I8LE',
+    'STD_I16BE',
+    'STD_I16LE',
+    'STD_I32BE',
+    'STD_I32LE',
+    'STD_I64BE',
+    'STD_I64LE',
+    'STD_U8BE',
+    'STD_U8LE',
+    'STD_U16BE',
+    'STD_U16LE',
+    'STD_U32BE',
+    'STD_U32LE',
+    'STD_U64BE',
+    'STD_U64LE',
+    'STD_B8BE',
+    'STD_B8LE',
+    'STD_B16BE',
+    'STD_B16LE',
+    'STD_B32BE',
+    'STD_B32LE',
+    'STD_B64BE',
+    'STD_B64LE',
+    'STD_REF_OBJ',
+    'STD_REF_DSETREG',
+}, addG)
+
+addConstants('h5t', {
+    'NATIVE_SCHAR',
+    'NATIVE_UCHAR',
+    'NATIVE_SHORT',
+    'NATIVE_USHORT',
+    'NATIVE_INT',
+    'NATIVE_UINT',
+    'NATIVE_LONG',
+    'NATIVE_ULONG',
+    'NATIVE_LLONG',
+    'NATIVE_ULLONG',
+    'NATIVE_FLOAT',
+    'NATIVE_DOUBLE',
+    'NATIVE_LDOUBLE',
+    'NATIVE_B8',
+    'NATIVE_B16',
+    'NATIVE_B32',
+    'NATIVE_B64',
+    'NATIVE_OPAQUE',
+    'NATIVE_HADDR',
+    'NATIVE_HSIZE',
+    'NATIVE_HSSIZE',
+    'NATIVE_HERR',
+    'NATIVE_HBOOL',
+    'NATIVE_INT8',
+    'NATIVE_UINT8',
+    'NATIVE_INT_LEAST8',
+    'NATIVE_UINT_LEAST8',
+    'NATIVE_INT_FAST8',
+    'NATIVE_UINT_FAST8',
+    'NATIVE_INT16',
+    'NATIVE_UINT16',
+    'NATIVE_INT_LEAST16',
+    'NATIVE_UINT_LEAST16',
+    'NATIVE_INT_FAST16',
+    'NATIVE_UINT_FAST16',
+    'NATIVE_INT32',
+    'NATIVE_UINT32',
+    'NATIVE_INT_LEAST32',
+    'NATIVE_UINT_LEAST32',
+    'NATIVE_INT_FAST32',
+    'NATIVE_UINT_FAST32',
+    'NATIVE_INT64',
+    'NATIVE_UINT64',
+    'NATIVE_INT_LEAST64',
+    'NATIVE_UINT_LEAST64',
+    'NATIVE_INT_FAST64',
+    'NATIVE_UINT_FAST64',
 }, addG)
 
 
@@ -2093,14 +2152,9 @@ hdf5.H5F_ACC_CREAT  = 0x0010       -- create non-existing files
 hdf5.H5P_DEFAULT = 0
 hdf5.H5S_ALL = 0
 
-hdf5.ffi = ffi
-
 local NULL = 0
 
 
--- Initialize HDF5
-hdf5.C.H5open()
-hdf5.C.H5check_version(1, 8, 12)
 
 local function convertSize(size)
     local nDims = size:size()
@@ -2168,10 +2222,20 @@ function HDF5File:close()
     print("status: ", status)
 end
 
-local typemap = {
-    ["torch.IntTensor"] = hdf5.C.H5T_STD_I32BE_g, -- this is a long
-    ["torch.DoubleTensor"] = hdf5.C.H5T_IEEE_F64BE_g
+local fileTypeMap = {
+    ["torch.IntTensor"] = hdf5.h5t.STD_I32BE,
+    ["torch.LongTensor"] = hdf5.h5t.STD_I32BE,
+    ["torch.DoubleTensor"] = hdf5.h5t.IEEE_F64BE
 }
+local nativeTypeMap = {
+    ["torch.IntTensor"] = hdf5.h5t.NATIVE_INT,
+    ["torch.LongTensor"] = hdf5.h5t.NATIVE_INT,
+    ["torch.DoubleTensor"] = hdf5.h5t.NATIVE_DOUBLE
+}
+
+local classMap = {}
+classMap[tonumber(hdf5.h5t.INTEGER)] = 'torch.IntTensor'
+classMap[tonumber(hdf5.h5t.FLOAT)] = 'torch.DoubleTensor'
 
 function HDF5File:set(datapath, tensor)
     local components = stringx.split(datapath, "/")
@@ -2192,9 +2256,11 @@ function HDF5File:set(datapath, tensor)
     local name = "/dset"
 
 --    print(hdf5.datatypes)
-    local datatype = typemap[torch.typename(tensor)]
-    if datatype == nil then
-        error("Unsupported type " .. torch.typename(tensor))
+    local typename = torch.typename(tensor)
+    local fileDataType = fileTypeMap[typename]
+    local memoryDataType = nativeTypeMap[typename]
+    if fileDataType == nil then
+        error("Unsupported type " .. typename)
     end
     -- hdf5.datatypes.H5T_INTEGER
     -- hdf5.std.H5T_STD_I32BE,
@@ -2202,47 +2268,61 @@ function HDF5File:set(datapath, tensor)
     local datasetID = hdf5.C.H5Dcreate2(
             self._fileID,
             name,
-            datatype,
+            fileDataType,
             dataspaceID,
             hdf5.H5P_DEFAULT,
             hdf5.H5P_DEFAULT,
             hdf5.H5P_DEFAULT
         );
-    print("set id: ", dataspaceID)
+--    print("set id: ", dataspaceID)
 
-    print("writing data")
+--    print("writing data")
     local status = hdf5.C.H5Dwrite(
             datasetID,
-            hdf5.C.H5T_NATIVE_INT_g,
+            memoryDataType,
             hdf5.H5S_ALL,
             hdf5.H5S_ALL,
             hdf5.H5P_DEFAULT,
             torch.data(tensor)
         );
-    print("status: ", status)
+--    print("status: ", status)
 
-    print("closing dataset")
+--    print("closing dataset")
     status = hdf5.C.H5Dclose(datasetID)
-    print("status: ", status)
-    print("closing dataspace")
+--    print("status: ", status)
+--    print("closing dataspace")
     status = hdf5.C.H5Sclose(dataspaceID)
-    print("status: ", status)
+--    print("status: ", status)
 end
 
 function HDF5File:get(datapath)
     local datasetID = hdf5.C.H5Dopen2(self._fileID, "/dset", hdf5.H5P_DEFAULT);
     local typeID = hdf5.C.H5Dget_type(datasetID)
+    local classID = tonumber(hdf5.C.H5Tget_class(typeID))
+    local torchType = classMap[classID]
+    if not torchType then
+        error("Unknown data type")
+    end
+    local hdf5memoryType = nativeTypeMap[torchType]
+    if not hdf5memoryType then
+        error("Cannot find hdf5 native type for " .. torchType)
+    end
     local spaceID = hdf5.C.H5Dget_space(datasetID)
     if not hdf5.C.H5Sis_simple(spaceID) then
         error("Error: complex dataspaces are not supported!")
     end
     local nDims = hdf5.C.H5Sget_simple_extent_ndims(spaceID)
-    print("nDims:", nDims)
+--    print("nDims:", nDims)
     local size = getDataspaceSize(nDims, spaceID)
-    print("size:", size)
-    local tensor  = torch.IntTensor(unpack(size))
+--    print("size:", size)
+    local factory = torch.factory(torchType)
+    if not factory then
+        error("No torch factory for type " .. torchType)
+    end
+    local tensor  = factory():resize(unpack(size))
+    print("created tensor", tensor)
     local dataPtr = torch.data(tensor)
-    hdf5.C.H5Dread(datasetID, hdf5.C.H5T_NATIVE_INT_g, hdf5.H5S_ALL, hdf5.H5S_ALL, hdf5.H5P_DEFAULT, dataPtr)
+    hdf5.C.H5Dread(datasetID, hdf5memoryType, hdf5.H5S_ALL, hdf5.H5S_ALL, hdf5.H5P_DEFAULT, dataPtr)
     print('tensor', tensor)
     return tensor
 end

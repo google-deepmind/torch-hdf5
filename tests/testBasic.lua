@@ -1,6 +1,8 @@
 require 'hdf5'
 require 'totem'
+local dir = require 'pl.dir'
 local path = require 'pl.path'
+local stringx = require 'pl.stringx'
 
 local tester = totem.Tester()
 local myTests = {}
@@ -43,7 +45,6 @@ function myTests:testIntTensor()
     local got = writeAndReread(testData)
     tester:assert(intTensorEqual(got, testData), "Data read does not match data written!")
 end
-
 --[[
 function myTests:testFloatTensor()
     local k = 0
@@ -53,13 +54,11 @@ function myTests:testFloatTensor()
 end
 ]]
 
---[[
 function myTests:testDoubleTensor()
     local k = 0
-    local testData = torch.IntTensor(4, 6):apply(function() k = k + math.pi; return k end)
+    local testData = torch.DoubleTensor(4, 6):apply(function() k = k + math.pi; return k end)
+    testData:div(7)
     local got = writeAndReread(testData)
     tester:assertTensorEq(got, testData, 1e-32, "Data read does not match data written!")
 end
-
---]]
 tester:add(myTests):run()
