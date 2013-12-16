@@ -2140,6 +2140,16 @@ addConstants('h5t', {
     'NATIVE_UINT_FAST64',
 }, addG)
 
+local function getNativeTypeName(nativeTypeID)
+--    print("LOOKING FOR ", nativeTypeID)
+    for k, v in pairs(hdf5.h5t) do
+--        prit(k, v)
+        if k:sub(1,6) == "NATIVE" and v == nativeTypeID then
+            return k
+        end
+    end
+    return nil
+end
 
 hdf5.H5F_ACC_RDONLY = 0x0000       -- absence of rdwr => rd-only 
 hdf5.H5F_ACC_RDWR   = 0x0001       -- open for read and write    
@@ -2217,27 +2227,56 @@ function HDF5File:__tostring()
 end
 
 function HDF5File:close()
-    print("closing file")
+--    print("closing file")
     local status = hdf5.C.H5Fclose(self._fileID)
-    print("status: ", status)
+    if not status then
+        error("Error closing file " .. self._filename)
+    end
+    -- TODO track file open status
+--    print("status: ", status)
 end
 
 local fileTypeMap = {
     ["torch.IntTensor"] = hdf5.h5t.STD_I32BE,
-    ["torch.LongTensor"] = hdf5.h5t.STD_I32BE,
+    ["torch.LongTensor"] = hdf5.h5t.STD_I64BE,
+    ["torch.FloatTensor"] = hdf5.h5t.IEEE_F32BE,
     ["torch.DoubleTensor"] = hdf5.h5t.IEEE_F64BE
 }
+local inverseNativeTypeMap = {
+        [hdf5.h5t.NATIVE_SCHAR] = "torch.ByteTensor",
+        [hdf5.h5t.NATIVE_SHORT] = "torch.IntTensor",
+        [hdf5.h5t.NATIVE_INT]   = "torch.IntTensor",
+        [hdf5.h5t.NATIVE_LONG]  = "torch.LongTensor",
+        [hdf5.h5t.NATIVE_LLONG] = "torch.LongTensor",
+--        H5T_NATIVE_UCHAR = "torch.Tensor",
+--        H5T_NATIVE_USHORT = "torch.Tensor",
+--        H5T_NATIVE_UINT = "torch.Tensor",
+--        H5T_NATIVE_ULONG = "torch.Tensor",
+--        H5T_NATIVE_ULLONG = "torch.Tensor",
+        [hdf5.h5t.NATIVE_FLOAT]  = "torch.FloatTensor",
+        [hdf5.h5t.NATIVE_DOUBLE] = "torch.DoubleTensor",
+--        H5T_NATIVE_LDOUBLE = "torch.Tensor",
+--        H5T_NATIVE_B8 = "torch.Tensor",
+--        H5T_NATIVE_B16 = "torch.Tensor",
+--        H5T_NATIVE_B32 = "torch.Tensor",
+--        H5T_NATIVE_B64 = "torch.Tensor",
+}
 local nativeTypeMap = {
+    ["torch.ByteTensor"] = hdf5.h5t.NATIVE_CHAR,
     ["torch.IntTensor"] = hdf5.h5t.NATIVE_INT,
-    ["torch.LongTensor"] = hdf5.h5t.NATIVE_INT,
-    ["torch.DoubleTensor"] = hdf5.h5t.NATIVE_DOUBLE
+    ["torch.LongTensor"] = hdf5.h5t.NATIVE_LONG,
+    ["torch.FloatTensor"] = hdf5.h5t.NATIVE_FLOAT,
+    ["torch.DoubleTensor"] = hdf5.h5t.NATIVE_DOUBLE,
 }
 
 local classMap = {}
-classMap[tonumber(hdf5.h5t.INTEGER)] = 'torch.IntTensor'
-classMap[tonumber(hdf5.h5t.FLOAT)] = 'torch.DoubleTensor'
+classMap[tonumber(hdf5.h5t.INTEGER)] = 'INTEGER'
+classMap[tonumber(hdf5.h5t.FLOAT)] = 'FLOAT'
+classMap[tonumber(hdf5.h5t.STRING)] = 'STRING'
 
 function HDF5File:set(datapath, tensor)
+    assert(datapath and type(datapath) == 'string')
+    assert(tensor and type(tensor) == 'userdata')
     local components = stringx.split(datapath, "/")
     --local total = #components
     --for k, component in ipairs(components) do
@@ -2251,7 +2290,7 @@ function HDF5File:set(datapath, tensor)
 
     -- (rank, dims, maxdims)
     local dataspaceID = hdf5.C.H5Screate_simple(tensor:nDimension(), dims, nullSize());
-    print("space id: ", dataspaceID)
+--    print("space id: ", dataspaceID)
 
     local name = "/dset"
 
@@ -2260,7 +2299,10 @@ function HDF5File:set(datapath, tensor)
     local fileDataType = fileTypeMap[typename]
     local memoryDataType = nativeTypeMap[typename]
     if fileDataType == nil then
-        error("Unsupported type " .. typename)
+        error("Cannot find hdf5 file type for " .. typename)
+    end
+    if memoryDataType == nil then
+        error("Cannot find hdf5 native type for " .. typename)
     end
     -- hdf5.datatypes.H5T_INTEGER
     -- hdf5.std.H5T_STD_I32BE,
@@ -2298,12 +2340,40 @@ end
 function HDF5File:get(datapath)
     local datasetID = hdf5.C.H5Dopen2(self._fileID, "/dset", hdf5.H5P_DEFAULT);
     local typeID = hdf5.C.H5Dget_type(datasetID)
-    local classID = tonumber(hdf5.C.H5Tget_class(typeID))
-    local torchType = classMap[classID]
-    if not torchType then
-        error("Unknown data type")
+    function getTorchType(typeID)
+        local classID = tonumber(hdf5.C.H5Tget_class(typeID))
+        local className = classMap[classID]
+        local size = tonumber(hdf5.C.H5Tget_size(typeID))
+        if className == 'INTEGER' then
+            if size == 1 then
+                return 'torch.ByteTensor'
+            end
+            if size == 4 then
+                return 'torch.IntTensor'
+            end
+            if size == 8 then
+                return 'torch.LongTensor'
+            end
+            error("Cannot support reading integer data with size = " .. size .. " bytes")
+        elseif className == 'FLOAT' then
+            if size == 4 then
+                return 'torch.FloatTensor'
+            end
+            if size == 8 then
+                return 'torch.DoubleTensor'
+            end
+            error("Cannot support reading float data with size = " .. size .. " bytes")
+
+        else
+            error("Reading data of class " .. tostring(className) .. "(" .. classID .. ") is unsupported")
+        end
     end
-    local hdf5memoryType = nativeTypeMap[torchType]
+    local nativeType = hdf5.C.H5Tget_native_type(typeID, hdf5.C.H5T_DIR_ASCEND)
+    local torchType = getTorchType(typeID)
+    if not torchType then
+        error("Could not find torch type for native type " .. tostring(getNativeTypeName(nativeType)))
+    end
+    local hdf5memoryType = nativeType
     if not hdf5memoryType then
         error("Cannot find hdf5 native type for " .. torchType)
     end
@@ -2312,18 +2382,14 @@ function HDF5File:get(datapath)
         error("Error: complex dataspaces are not supported!")
     end
     local nDims = hdf5.C.H5Sget_simple_extent_ndims(spaceID)
---    print("nDims:", nDims)
     local size = getDataspaceSize(nDims, spaceID)
---    print("size:", size)
     local factory = torch.factory(torchType)
     if not factory then
         error("No torch factory for type " .. torchType)
     end
-    local tensor  = factory():resize(unpack(size))
-    print("created tensor", tensor)
+    local tensor = factory():resize(unpack(size))
     local dataPtr = torch.data(tensor)
     hdf5.C.H5Dread(datasetID, hdf5memoryType, hdf5.H5S_ALL, hdf5.H5S_ALL, hdf5.H5P_DEFAULT, dataPtr)
-    print('tensor', tensor)
     return tensor
 end
 

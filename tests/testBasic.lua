@@ -17,6 +17,7 @@ end
 
 local function writeAndReread(data)
     local got
+    local typeIn = torch.typename(data)
     withTmpDir(function(tmpDir)
         local filename = path.join(tmpDir, "test.h5")
         local writeFile = hdf5.open(filename, 'w')
@@ -28,6 +29,8 @@ local function writeAndReread(data)
         tester:assertne(readFile, nil, "hdf5.open returned nil")
         got = readFile:get('data')
         tester:assertne(got, nil, "hdf5.get returned nil")
+        local typeOut = torch.typename(got)
+        tester:asserteq(typeIn, typeOut, "type read not the same as type written: was " .. typeIn .. "; is " .. typeOut)
     end)
     return got
 end
@@ -45,14 +48,15 @@ function myTests:testIntTensor()
     local got = writeAndReread(testData)
     tester:assert(intTensorEqual(got, testData), "Data read does not match data written!")
 end
---[[
+
 function myTests:testFloatTensor()
     local k = 0
-    local testData = torch.IntTensor(4, 6):apply(function() k = k + math.pi; return k end)
+    local testData = torch.FloatTensor(4, 6):apply(function() k = k + math.pi; return k end)
+    testData:div(7)
     local got = writeAndReread(testData)
+    print("GOT", got)
     tester:assertTensorEq(got, testData, 1e-32, "Data read does not match data written!")
 end
-]]
 
 function myTests:testDoubleTensor()
     local k = 0
