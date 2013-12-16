@@ -3,13 +3,13 @@ return {
     --filter = nil,
 
     -- exclude: pattern or table of patterns; file paths to exclude
-    --exclude = { 'test', 'build' },
+    exclude = { 'README', 'tests' },
 
     -- tocLevelTopSection: integer; max depth of table of contents for standalone .md docs
     --tocLevelTopSection = nil,
 
     -- sectionOrder: table; paths of .md files in order of priority
-    sectionOrder = { "README", "usage" },
+    sectionOrder = { "init", "usage" },
 
     -- packageName: string; override the inferred package namespace
     packageName = "hdf5",
