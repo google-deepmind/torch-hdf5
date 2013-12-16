@@ -1,3 +1,9 @@
+--[[
+
+Tests for correctness of data writing & reading.
+
+]]
+
 require 'hdf5'
 require 'totem'
 local dir = require 'pl.dir'
