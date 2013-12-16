@@ -151,32 +151,18 @@ addConstants('h5t', {
     'NATIVE_UINT_FAST64',
 }, addG)
 
-local function getNativeTypeName(nativeTypeID)
---    print("LOOKING FOR ", nativeTypeID)
-    for k, v in pairs(hdf5.h5t) do
---        prit(k, v)
-        if k:sub(1,6) == "NATIVE" and v == nativeTypeID then
-            return k
-        end
-    end
-    return nil
-end
-
-hdf5.H5F_ACC_RDONLY = 0x0000       -- absence of rdwr => rd-only 
-hdf5.H5F_ACC_RDWR   = 0x0001       -- open for read and write    
-hdf5.H5F_ACC_TRUNC  = 0x0002       -- overwrite existing files   
-hdf5.H5F_ACC_EXCL   = 0x0004       -- fail if file already exists
-hdf5.H5F_ACC_DEBUG  = 0x0008       -- print debug info           
-hdf5.H5F_ACC_CREAT  = 0x0010       -- create non-existing files  
+hdf5.H5F_ACC_RDONLY = 0x0000 -- absence of rdwr => rd-only
+hdf5.H5F_ACC_RDWR   = 0x0001 -- open for read and write
+hdf5.H5F_ACC_TRUNC  = 0x0002 -- overwrite existing files
+hdf5.H5F_ACC_EXCL   = 0x0004 -- fail if file already exists
+hdf5.H5F_ACC_DEBUG  = 0x0008 -- print debug info
+hdf5.H5F_ACC_CREAT  = 0x0010 -- create non-existing files
 
 
 hdf5.H5P_DEFAULT = 0
 hdf5.H5S_ALL = 0
 
-local NULL = 0
-
-
-
+--[[ Convert from LongStorage containing tensor sizes to an HDF5 hsize_t array ]]
 local function convertSize(size)
     local nDims = size:size()
     local size_t = hdf5.ffi.typeof("hsize_t[" .. nDims .. "]")
@@ -187,6 +173,7 @@ local function convertSize(size)
     return hdf5_size
 end
 
+--[[ Get the sizes and max sizes of an HDF5 dataspace, returning them in Lua tables ]]
 local function getDataspaceSize(nDims, spaceID)
     local size_t = hdf5.ffi.typeof("hsize_t[" .. nDims .. "]")
     local dims = size_t()
@@ -203,6 +190,7 @@ local function getDataspaceSize(nDims, spaceID)
     return size, maxSize
 end
 
+--[[ Return a pointer to a NULL hsize_t array ]]
 local function nullSize()
     local size_t = hdf5.ffi.typeof("hsize_t *")
     return size_t()
@@ -210,6 +198,9 @@ end
 
 function hdf5.open(filename, mode)
     if mode == 'w' then
+        -- TODO more control over options?
+        -- * compression
+        -- * chunking
         local fileID = hdf5.C.H5Fcreate(filename, hdf5.H5F_ACC_TRUNC, hdf5.H5P_DEFAULT, hdf5.H5P_DEFAULT)
         return hdf5.HDF5File(filename, fileID)
     elseif mode == 'r' then
@@ -382,7 +373,7 @@ function HDF5File:get(datapath)
     local nativeType = hdf5.C.H5Tget_native_type(typeID, hdf5.C.H5T_DIR_ASCEND)
     local torchType = getTorchType(typeID)
     if not torchType then
-        error("Could not find torch type for native type " .. tostring(getNativeTypeName(nativeType)))
+        error("Could not find torch type for native type " .. tostring(nativeType))
     end
     local hdf5memoryType = nativeType
     if not hdf5memoryType then
