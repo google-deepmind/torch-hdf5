@@ -10,6 +10,13 @@ This format is fast and flexible, and is used by many scientific applications (M
 
 hdf5 = {}
 
+require 'logroll'
+hdf5._logger = logroll.print_logger()
+
 torch.include("hdf5", "ffi.lua")
+
+function hdf5.debugMode()
+    hdf5._logger.level = 0
+end
 
 return hdf5

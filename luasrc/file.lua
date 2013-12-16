@@ -51,13 +51,11 @@ function HDF5File:__tostring()
 end
 
 function HDF5File:close()
---    print("closing file")
+    hdf5._logger.debug("Closing " .. tostring(self))
     local status = hdf5.C.H5Fclose(self._fileID)
     if not status then
-        error("Error closing file " .. self._filename)
+        hdf5._logger.error("Error closing " .. tostring(self))
     end
-    -- TODO track file open status
---    print("status: ", status)
 end
 
 function HDF5File:write(datapath, tensor)
@@ -76,11 +74,9 @@ function HDF5File:write(datapath, tensor)
 
     -- (rank, dims, maxdims)
     local dataspaceID = hdf5.C.H5Screate_simple(tensor:nDimension(), dims, nullSize());
---    print("space id: ", dataspaceID)
 
     local name = "/dset"
 
---    print(hdf5.datatypes)
     local typename = torch.typename(tensor)
     local fileDataType = hdf5._outputTypeForTensorType(typename)
     local memoryDataType = hdf5._nativeTypeForTensorType(typename)
@@ -96,9 +92,7 @@ function HDF5File:write(datapath, tensor)
             hdf5.H5P_DEFAULT,
             hdf5.H5P_DEFAULT
         );
---    print("set id: ", dataspaceID)
 
---    print("writing data")
     local status = hdf5.C.H5Dwrite(
             datasetID,
             memoryDataType,
@@ -107,17 +101,16 @@ function HDF5File:write(datapath, tensor)
             hdf5.H5P_DEFAULT,
             torch.data(tensor)
         );
---    print("status: ", status)
+    -- TODO check status
 
---    print("closing dataset")
     status = hdf5.C.H5Dclose(datasetID)
---    print("status: ", status)
---    print("closing dataspace")
+    -- TODO check status
     status = hdf5.C.H5Sclose(dataspaceID)
---    print("status: ", status)
+    -- TODO check status
 end
 
 function HDF5File:read(datapath)
+    hdf5._logger.debug("Opening " .. tostring(self))
     local datasetID = hdf5.C.H5Dopen2(self._fileID, "/dset", hdf5.H5P_DEFAULT);
     local typeID = hdf5.C.H5Dget_type(datasetID)
     local nativeType = hdf5.C.H5Tget_native_type(typeID, hdf5.C.H5T_DIR_ASCEND)
