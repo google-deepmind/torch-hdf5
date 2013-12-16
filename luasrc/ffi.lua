@@ -162,40 +162,6 @@ hdf5.H5F_ACC_CREAT  = 0x0010 -- create non-existing files
 hdf5.H5P_DEFAULT = 0
 hdf5.H5S_ALL = 0
 
---[[ Convert from LongStorage containing tensor sizes to an HDF5 hsize_t array ]]
-local function convertSize(size)
-    local nDims = size:size()
-    local size_t = hdf5.ffi.typeof("hsize_t[" .. nDims .. "]")
-    local hdf5_size = size_t()
-    for k = 1, nDims do
-        hdf5_size[k-1] = size[k]
-    end
-    return hdf5_size
-end
-
---[[ Get the sizes and max sizes of an HDF5 dataspace, returning them in Lua tables ]]
-local function getDataspaceSize(nDims, spaceID)
-    local size_t = hdf5.ffi.typeof("hsize_t[" .. nDims .. "]")
-    local dims = size_t()
-    local maxDims = size_t()
-    if hdf5.C.H5Sget_simple_extent_dims(spaceID, dims, maxDims) ~= nDims then
-        error("Failed getting dataspace size")
-    end
-    local size = {}
-    local maxSize = {}
-    for k = 1, nDims do
-        size[k] = tonumber(dims[k-1])
-        maxSize[k] = tonumber(maxDims[k-1])
-    end
-    return size, maxSize
-end
-
---[[ Return a pointer to a NULL hsize_t array ]]
-local function nullSize()
-    local size_t = hdf5.ffi.typeof("hsize_t *")
-    return size_t()
-end
-
 function hdf5.open(filename, mode)
     if mode == 'w' then
         -- TODO more control over options?
@@ -211,58 +177,19 @@ function hdf5.open(filename, mode)
     end
 end
 
-local HDF5File = torch.class("hdf5.HDF5File")
-
-function HDF5File:__init(filename, fileID)
-    assert(filename and type(filename) == 'string', "HDF5File.__init() requires a filename - perhaps you want HDF5File.create()?")
-    assert(fileID and type(fileID) == 'number', "HDF5File.__init() requires a fileID - perhaps you want HDF5File.create()?")
-    self._filename = filename
-    self._fileID = fileID
-end
-
-function HDF5File:filename()
-    return self._filename
-end
-
-function HDF5File:__tostring()
-    return "[HDF5File: " .. self:filename() .. "]"
-end
-
-function HDF5File:close()
---    print("closing file")
-    local status = hdf5.C.H5Fclose(self._fileID)
-    if not status then
-        error("Error closing file " .. self._filename)
-    end
-    -- TODO track file open status
---    print("status: ", status)
-end
-
+-- This table specifies which exact format a given type of Tensor should be saved as.
 local fileTypeMap = {
     ["torch.IntTensor"] = hdf5.h5t.STD_I32BE,
     ["torch.LongTensor"] = hdf5.h5t.STD_I64BE,
     ["torch.FloatTensor"] = hdf5.h5t.IEEE_F32BE,
     ["torch.DoubleTensor"] = hdf5.h5t.IEEE_F64BE
 }
-local inverseNativeTypeMap = {
-        [hdf5.h5t.NATIVE_SCHAR] = "torch.ByteTensor",
-        [hdf5.h5t.NATIVE_SHORT] = "torch.IntTensor",
-        [hdf5.h5t.NATIVE_INT]   = "torch.IntTensor",
-        [hdf5.h5t.NATIVE_LONG]  = "torch.LongTensor",
-        [hdf5.h5t.NATIVE_LLONG] = "torch.LongTensor",
---        H5T_NATIVE_UCHAR = "torch.Tensor",
---        H5T_NATIVE_USHORT = "torch.Tensor",
---        H5T_NATIVE_UINT = "torch.Tensor",
---        H5T_NATIVE_ULONG = "torch.Tensor",
---        H5T_NATIVE_ULLONG = "torch.Tensor",
-        [hdf5.h5t.NATIVE_FLOAT]  = "torch.FloatTensor",
-        [hdf5.h5t.NATIVE_DOUBLE] = "torch.DoubleTensor",
---        H5T_NATIVE_LDOUBLE = "torch.Tensor",
---        H5T_NATIVE_B8 = "torch.Tensor",
---        H5T_NATIVE_B16 = "torch.Tensor",
---        H5T_NATIVE_B32 = "torch.Tensor",
---        H5T_NATIVE_B64 = "torch.Tensor",
-}
+
+function hdf5._outputTypeForTensorType(tensorType)
+    return fileTypeMap[tensorType]
+end
+
+-- This table tells HDF5 what format to read a given Tensor's data into memory as.
 local nativeTypeMap = {
     ["torch.ByteTensor"] = hdf5.h5t.NATIVE_CHAR,
     ["torch.IntTensor"] = hdf5.h5t.NATIVE_INT,
@@ -271,133 +198,56 @@ local nativeTypeMap = {
     ["torch.DoubleTensor"] = hdf5.h5t.NATIVE_DOUBLE,
 }
 
+function hdf5._nativeTypeForTensorType(tensorType)
+    local nativeType = nativeTypeMap[tensorType]
+    if nativeType == nil then
+        error("Cannot find hdf5 native type for " .. typename)
+    end
+    return nativeType
+end
+
+-- This table lets us stringify HDF5 datatype classes
 local classMap = {}
 classMap[tonumber(hdf5.h5t.INTEGER)] = 'INTEGER'
 classMap[tonumber(hdf5.h5t.FLOAT)] = 'FLOAT'
 classMap[tonumber(hdf5.h5t.STRING)] = 'STRING'
 
-function HDF5File:set(datapath, tensor)
-    assert(datapath and type(datapath) == 'string')
-    assert(tensor and type(tensor) == 'userdata')
-    local components = stringx.split(datapath, "/")
-    --local total = #components
-    --for k, component in ipairs(components) do
-    --    if k == total then
-    --        -- create dataset
-    --    else
-    --        -- create group
-    --    end
-    --end
-    local dims = convertSize(tensor:size())
-
-    -- (rank, dims, maxdims)
-    local dataspaceID = hdf5.C.H5Screate_simple(tensor:nDimension(), dims, nullSize());
---    print("space id: ", dataspaceID)
-
-    local name = "/dset"
-
---    print(hdf5.datatypes)
-    local typename = torch.typename(tensor)
-    local fileDataType = fileTypeMap[typename]
-    local memoryDataType = nativeTypeMap[typename]
-    if fileDataType == nil then
-        error("Cannot find hdf5 file type for " .. typename)
+function hdf5._datatypeName(typeID)
+    local classID = tonumber(hdf5.C.H5Tget_class(typeID))
+    local className = classMap[classID]
+    if not className then
+        error("Unknown class for type " .. typeID)
     end
-    if memoryDataType == nil then
-        error("Cannot find hdf5 native type for " .. typename)
-    end
-    -- hdf5.datatypes.H5T_INTEGER
-    -- hdf5.std.H5T_STD_I32BE,
---    print(datatype)
-    local datasetID = hdf5.C.H5Dcreate2(
-            self._fileID,
-            name,
-            fileDataType,
-            dataspaceID,
-            hdf5.H5P_DEFAULT,
-            hdf5.H5P_DEFAULT,
-            hdf5.H5P_DEFAULT
-        );
---    print("set id: ", dataspaceID)
-
---    print("writing data")
-    local status = hdf5.C.H5Dwrite(
-            datasetID,
-            memoryDataType,
-            hdf5.H5S_ALL,
-            hdf5.H5S_ALL,
-            hdf5.H5P_DEFAULT,
-            torch.data(tensor)
-        );
---    print("status: ", status)
-
---    print("closing dataset")
-    status = hdf5.C.H5Dclose(datasetID)
---    print("status: ", status)
---    print("closing dataspace")
-    status = hdf5.C.H5Sclose(dataspaceID)
---    print("status: ", status)
+    return className
 end
 
-function HDF5File:get(datapath)
-    local datasetID = hdf5.C.H5Dopen2(self._fileID, "/dset", hdf5.H5P_DEFAULT);
-    local typeID = hdf5.C.H5Dget_type(datasetID)
-    function getTorchType(typeID)
-        local classID = tonumber(hdf5.C.H5Tget_class(typeID))
-        local className = classMap[classID]
-        local size = tonumber(hdf5.C.H5Tget_size(typeID))
-        if className == 'INTEGER' then
-            if size == 1 then
-                return 'torch.ByteTensor'
-            end
-            if size == 4 then
-                return 'torch.IntTensor'
-            end
-            if size == 8 then
-                return 'torch.LongTensor'
-            end
-            error("Cannot support reading integer data with size = " .. size .. " bytes")
-        elseif className == 'FLOAT' then
-            if size == 4 then
-                return 'torch.FloatTensor'
-            end
-            if size == 8 then
-                return 'torch.DoubleTensor'
-            end
-            error("Cannot support reading float data with size = " .. size .. " bytes")
 
-        else
-            error("Reading data of class " .. tostring(className) .. "(" .. classID .. ") is unsupported")
+function hdf5._getTorchType(typeID)
+    local className = hdf5._datatypeName(typeID)
+    local size = tonumber(hdf5.C.H5Tget_size(typeID))
+    if className == 'INTEGER' then
+        if size == 1 then
+            return 'torch.ByteTensor'
         end
+        if size == 4 then
+            return 'torch.IntTensor'
+        end
+        if size == 8 then
+            return 'torch.LongTensor'
+        end
+        error("Cannot support reading integer data with size = " .. size .. " bytes")
+    elseif className == 'FLOAT' then
+        if size == 4 then
+            return 'torch.FloatTensor'
+        end
+        if size == 8 then
+            return 'torch.DoubleTensor'
+        end
+        error("Cannot support reading float data with size = " .. size .. " bytes")
+
+    else
+        error("Reading data of class " .. tostring(className) .. "(" .. classID .. ") is unsupported")
     end
-    local nativeType = hdf5.C.H5Tget_native_type(typeID, hdf5.C.H5T_DIR_ASCEND)
-    local torchType = getTorchType(typeID)
-    if not torchType then
-        error("Could not find torch type for native type " .. tostring(nativeType))
-    end
-    local hdf5memoryType = nativeType
-    if not hdf5memoryType then
-        error("Cannot find hdf5 native type for " .. torchType)
-    end
-    local spaceID = hdf5.C.H5Dget_space(datasetID)
-    if not hdf5.C.H5Sis_simple(spaceID) then
-        error("Error: complex dataspaces are not supported!")
-    end
-    local nDims = hdf5.C.H5Sget_simple_extent_ndims(spaceID)
-    local size = getDataspaceSize(nDims, spaceID)
-    local factory = torch.factory(torchType)
-    if not factory then
-        error("No torch factory for type " .. torchType)
-    end
-    local tensor = factory():resize(unpack(size))
-    local dataPtr = torch.data(tensor)
-    hdf5.C.H5Dread(datasetID, hdf5memoryType, hdf5.H5S_ALL, hdf5.H5S_ALL, hdf5.H5P_DEFAULT, dataPtr)
-    return tensor
 end
 
-function hdf5.HDF5File.create(filename)
-end
-function hdf5.HDF5File.open(filename)
-    return nil
-end
-
+torch.include('hdf5', 'file.lua')
