@@ -7,9 +7,9 @@ source = {
 }
 
 description = {
-  summary = "Torch documentation scripts",
+  summary = "Interface to HDF5 library",
   homepage = "http://d11.github.io/torch-hdf5",
-  detailed = "Work in progress",
+  detailed = "Read and write Torch tensor data to and from Hierarchical Data Format files.",
   license = "BSD",
   maintainer = "Dan Horgan <danhgn+github@gmail.com>"
 }
