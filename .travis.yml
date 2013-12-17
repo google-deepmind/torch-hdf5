@@ -13,9 +13,9 @@ install:
   - echo "==== Installing Torch ===="
   - curl -sk https://raw.github.com/torch/ezinstall/master/install-luajit+torch | sudo bash &> /dev/null
   - echo "==== Installing hdf5 ===="
-  - sudo apt-get install libhdf5-serial-dev hdf5-tools &> /dev/null
+  - sudo apt-get install libhdf5-serial-dev hdf5-tools
   - echo "==== Building torch-hdf5, using luarocks ===="
-  - sudo luarocks make &> /dev/null
+  - sudo luarocks make
 
 script: 'for x in tests/test*.lua ; do echo "==== $x ====" ; th $x ; done'
 
