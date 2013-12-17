@@ -1,0 +1,27 @@
+language: erlang
+
+env:
+  - LUA="th"
+
+branches:
+  only:
+    - master
+
+install:
+  - echo "==== Installing dependencies ===="
+  - curl -sk https://raw.github.com/torch/ezinstall/master/install-deps | sudo bash &> /dev/null
+  - echo "==== Installing Torch ===="
+  - curl -sk https://raw.github.com/torch/ezinstall/master/install-luajit+torch | sudo bash &> /dev/null
+  - echo "==== Installing hdf5 ===="
+  - sudo apt-get install libhdf5-serial-dev hdf5-tools &> /dev/null
+  - echo "==== Building torch-hdf5, using luarocks ===="
+  - sudo luarocks make &> /dev/null
+
+script: 'for x in tests/test*.lua ; do echo "==== $x ====" ; th $x ; done'
+
+notifications:
+  recipients:
+    - danhgn@gmail.com
+  email:
+    on_success: change
+    on_failure: always
