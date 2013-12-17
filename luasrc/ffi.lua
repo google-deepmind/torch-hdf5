@@ -225,7 +225,6 @@ function hdf5._datatypeName(typeID)
 end
 
 function hdf5._getTorchType(typeID)
-    print("TYPE ID", typeID)
     local className = hdf5._datatypeName(typeID)
     local size = tonumber(hdf5.C.H5Tget_size(typeID))
     if className == 'INTEGER' then

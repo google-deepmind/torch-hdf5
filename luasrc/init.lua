@@ -25,7 +25,6 @@ function hdf5._loadObject(parent, locationID, datapath)
     end
 
     local typeID = hdf5.C.H5Iget_type(objectID)
-    print("TYPE", typeID)
 
     if typeID == hdf5.C.H5I_GROUP then
         local groupID = hdf5.C.H5Gopen2(locationID, datapath, hdf5.H5P_DEFAULT)

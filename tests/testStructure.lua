@@ -29,7 +29,6 @@ local function writeAndReread(location, data)
         os.execute("h5dump " .. filename)
         tester:assertne(readFile, nil, "hdf5.open returned nil")
         local data = readFile:read(location)
-        print("READ DATA", data)
         got = data:all()
         tester:assertne(got, nil, "hdf5.read returned nil")
         local typeOut = torch.typename(got) or type(got)
@@ -73,9 +72,7 @@ end
 function myTests:testWriteTableRoot()
     local testData = { data = torch.rand(4, 6) }
     local dataPath = "/"
-    print("WROTE", testData)
     local got = writeAndReread(dataPath, testData)
-    print("GOT", got)
     local result, msg, a, b = deepAlmostEq(got, testData, 1e-16)
     tester:assert(result, "data read is not the same as data written: " .. tostring(msg) .. " in " .. pretty.write(a) .. " (GOT)\n-- VS --\n" .. pretty.write(b) .. " (EXPECTED)\n")
 end
