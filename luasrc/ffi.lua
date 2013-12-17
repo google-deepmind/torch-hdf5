@@ -224,8 +224,8 @@ function hdf5._datatypeName(typeID)
     return className
 end
 
-
 function hdf5._getTorchType(typeID)
+    print("TYPE ID", typeID)
     local className = hdf5._datatypeName(typeID)
     local size = tonumber(hdf5.C.H5Tget_size(typeID))
     if className == 'INTEGER' then
@@ -253,4 +253,3 @@ function hdf5._getTorchType(typeID)
     end
 end
 
-torch.include('hdf5', 'file.lua')

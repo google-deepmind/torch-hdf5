@@ -58,24 +58,11 @@ function HDF5File:close()
     end
 end
 
-function HDF5File:write(datapath, tensor)
-    assert(datapath and type(datapath) == 'string')
-    assert(tensor and type(tensor) == 'userdata')
-    local components = stringx.split(datapath, "/")
-    --local total = #components
-    --for k, component in ipairs(components) do
-    --    if k == total then
-    --        -- create dataset
-    --    else
-    --        -- create group
-    --    end
-    --end
+function HDF5File:_writeTensor(locationID, name, tensor)
     local dims = convertSize(tensor:size())
 
     -- (rank, dims, maxdims)
     local dataspaceID = hdf5.C.H5Screate_simple(tensor:nDimension(), dims, nullSize());
-
-    local name = "/dset"
 
     local typename = torch.typename(tensor)
     local fileDataType = hdf5._outputTypeForTensorType(typename)
@@ -109,39 +96,60 @@ function HDF5File:write(datapath, tensor)
     -- TODO check status
 end
 
-function HDF5File:read(datapath)
-    hdf5._logger.debug("Opening " .. tostring(self))
-    local datasetID = hdf5.C.H5Dopen2(self._fileID, "/dset", hdf5.H5P_DEFAULT);
-    local typeID = hdf5.C.H5Dget_type(datasetID)
-    local nativeType = hdf5.C.H5Tget_native_type(typeID, hdf5.C.H5T_DIR_ASCEND)
-    local torchType = hdf5._getTorchType(typeID)
-    if not torchType then
-        error("Could not find torch type for native type " .. tostring(nativeType))
-    end
-    if not nativeType then
-        error("Cannot find hdf5 native type for " .. torchType)
-    end
-    local spaceID = hdf5.C.H5Dget_space(datasetID)
-    if not hdf5.C.H5Sis_simple(spaceID) then
-        error("Error: complex dataspaces are not supported!")
-    end
+function HDF5File:_writeTable(locationID, name, table)
+    for name, v in pairs(table) do
 
-    -- Create a new tensor of the correct type and size
-    local nDims = hdf5.C.H5Sget_simple_extent_ndims(spaceID)
-    local size = getDataspaceSize(nDims, spaceID)
-    local factory = torch.factory(torchType)
-    if not factory then
-        error("No torch factory for type " .. torchType)
+        -- create group for key (or ensure exists)
+        -- TODO
+        local subLocationID = 0
+
+        self:_writeData(subLocationID, name, v)
     end
-
-    local tensor = factory():resize(unpack(size))
-
-    -- Read data into the tensor
-    local dataPtr = torch.data(tensor)
-    hdf5.C.H5Dread(datasetID, nativeType, hdf5.H5S_ALL, hdf5.H5S_ALL, hdf5.H5P_DEFAULT, dataPtr)
-    return tensor
 end
 
+local function isTensor(data)
+    -- TODO
+    return true
+end
+
+function HDF5File:_writeData(locationID, name, data)
+
+    if type(data) == 'table' then
+        self:_writeTable(locationID, name, data)
+    elseif type(data) == 'userdata' then
+        if isTensor(data) then
+            self:_writeTensor(locationID, name, data)
+        else
+            error("HDF5File: writing non-Tensor userdata is not supported")
+        end
+    else
+        error("HDF5File: writing data of type " .. type(data) .. " is not supported")
+    end
+
+end
+
+function HDF5File:write(datapath, data)
+    assert(datapath and type(datapath) == 'string', "HDF5File:write() requires a string (data path) as its first parameter")
+    assert(data and type(data) == 'userdata' or type(data) == 'table', "HDF5File:write() requires a tensor or table as its second parameter")
+    local components = stringx.split(datapath, "/")
+
+    for k, component in ipairs(components) do
+        local table = {}
+        table[component] = data
+        data = table
+    end
+
+    local root = 0 -- TODO
+    local name = ""
+    self:_writeData(root, name, data)
+end
+
+function HDF5File:read(datapath)
+    hdf5._logger.debug("Opening " .. tostring(self))
+    hdf5._loadObject(self._fileID, datapath)
+end
+
+-- TODO fix or remove
 function hdf5.HDF5File.create(filename)
 end
 function hdf5.HDF5File.open(filename)
