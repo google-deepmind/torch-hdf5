@@ -5,12 +5,11 @@ Tests for correctness of data writing & reading.
 ]]
 
 require 'hdf5'
-require 'totem'
 local dir = require 'pl.dir'
 local path = require 'pl.path'
 local stringx = require 'pl.stringx'
 
-local tester = totem.Tester()
+local tester = torch.Tester()
 local myTests = {}
 
 local function withTmpDir(func)
@@ -86,4 +85,6 @@ function myTests:testDoubleTensor()
     local got = writeAndReread(testData)
     tester:assertTensorEq(got, testData, 1e-32, "Data read does not match data written!")
 end
-tester:add(myTests):run()
+tester:add(myTests)
+tester:run()
+os.exit(#tester.errors)
