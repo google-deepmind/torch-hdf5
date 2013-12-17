@@ -1,5 +1,17 @@
 # Getting started
 
+## Installation
+
+### OS X
+
+    brew install hdf5
+    luarocks install hdf5
+
+### Ubuntu
+
+    sudo apt-get install libhdf5-serial-dev hdf5-tools
+    luarocks install hdf5
+
 ## Writing from torch
 
     require 'hdf5'
@@ -18,6 +30,8 @@
 
     h5read /path/to/file.h5 /location/of/data
 
+See the [Matlab documentation](http://www.mathworks.co.uk/help/matlab/hdf5-files.html) for further information.
+
 ## Reading from Python
 
 You need to install a library:
@@ -33,6 +47,8 @@ Then:
     data = myFile['location']['of']['data'][...]
     print(data)
 
+See also the [h5py manual](http://www.h5py.org/docs/).
+
 ## Reading from R
 
 You need to install a library:
@@ -46,7 +62,31 @@ Then:
     mydata <- h5read("/path/to/file.h5", "/location/of/data")
     str(mydata)
 
-Alternative libraries for R include 'h5r' and 'ncdf4'.
+Alternative libraries for R include **'h5r'** and **'ncdf4'**.
+
+## Command-line
+
+There are also a number of handy command-line tools.
+
+### h5ls
+
+Lists specified features of HDF5 file contents.
+
+### h5dump
+
+Examine the contents of an HDF5 file and dump those contents to an ASCII file.
+
+### h5diff
+
+Compare two HDF5 files.
+
+### h5copy
+
+Copies HDF5 objects from a file to a new file
+
+### Other
+
+See [this page](http://www.hdfgroup.org/HDF5/doc/RM/Tools.html) for many more HDF5 tools.
 
 ## Elsewhere
 
