@@ -1,5 +1,22 @@
 local HDF5DataSet = torch.class("hdf5.HDF5DataSet")
 
+--[[ Get the sizes and max sizes of an HDF5 dataspace, returning them in Lua tables ]]
+local function getDataspaceSize(nDims, spaceID)
+    local size_t = hdf5.ffi.typeof("hsize_t[" .. nDims .. "]")
+    local dims = size_t()
+    local maxDims = size_t()
+    if hdf5.C.H5Sget_simple_extent_dims(spaceID, dims, maxDims) ~= nDims then
+        error("Failed getting dataspace size")
+    end
+    local size = {}
+    local maxSize = {}
+    for k = 1, nDims do
+        size[k] = tonumber(dims[k-1])
+        maxSize[k] = tonumber(maxDims[k-1])
+    end
+    return size, maxSize
+end
+
 function HDF5DataSet:__init(parent, datasetID)
     self._parent = parent
     self._datasetID = datasetID

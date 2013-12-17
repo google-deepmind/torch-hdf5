@@ -18,7 +18,7 @@ torch.include("hdf5", "file.lua")
 torch.include("hdf5", "dataset.lua")
 torch.include("hdf5", "group.lua")
 
-function hdf5._loadObject(locationID, datapath)
+function hdf5._loadObject(parent, locationID, datapath)
     local objectID = hdf5.C.H5Oopen(locationID, datapath, hdf5.H5P_DEFAULT)
     if objectID < 0 then
         error("Unable to read from '" .. datapath .. "' in " .. tostring(parent) .. " - no such data path.")

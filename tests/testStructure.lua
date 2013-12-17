@@ -1,4 +1,5 @@
 require 'hdf5'
+hdf5.debugMode()
 local pretty = require 'pl.pretty'
 
 local myTests = {}
@@ -27,7 +28,9 @@ local function writeAndReread(location, data)
         local readFile = hdf5.open(filename, 'r')
         os.execute("h5dump " .. filename)
         tester:assertne(readFile, nil, "hdf5.open returned nil")
-        got = readFile:read(location):all()
+        local data = readFile:read(location)
+        print("READ DATA", data)
+        got = data:all()
         tester:assertne(got, nil, "hdf5.read returned nil")
         local typeOut = torch.typename(got) or type(got)
         tester:asserteq(typeIn, typeOut, "type read not the same as type written: was " .. typeIn .. "; is " .. typeOut)
@@ -51,7 +54,7 @@ local function deepAlmostEq(a, b, epsilon, msg)
             if not a[k] then
                 return false, "mismatching table keys", a, b
             end
-            local result, msg, subA, subB
+            local result, msg, subA, subB = deepAlmostEq(a[k], v, epsilon, msg)
             if not result then
                 return false, msg, subA, subB
             end
@@ -74,7 +77,7 @@ function myTests:testWriteTableRoot()
     local got = writeAndReread(dataPath, testData)
     print("GOT", got)
     local result, msg, a, b = deepAlmostEq(got, testData, 1e-16)
-    tester:assert(result, "data read is not the same as data written: " .. msg .. " in " .. pretty.write(a) .. " (GOT)\n-- VS --\n" .. pretty.write(b) .. " (EXPECTED)\n")
+    tester:assert(result, "data read is not the same as data written: " .. tostring(msg) .. " in " .. pretty.write(a) .. " (GOT)\n-- VS --\n" .. pretty.write(b) .. " (EXPECTED)\n")
 end
 
 tester:add(myTests)

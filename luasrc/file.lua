@@ -10,23 +10,6 @@ local function convertSize(size)
     return hdf5_size
 end
 
---[[ Get the sizes and max sizes of an HDF5 dataspace, returning them in Lua tables ]]
-local function getDataspaceSize(nDims, spaceID)
-    local size_t = hdf5.ffi.typeof("hsize_t[" .. nDims .. "]")
-    local dims = size_t()
-    local maxDims = size_t()
-    if hdf5.C.H5Sget_simple_extent_dims(spaceID, dims, maxDims) ~= nDims then
-        error("Failed getting dataspace size")
-    end
-    local size = {}
-    local maxSize = {}
-    for k = 1, nDims do
-        size[k] = tonumber(dims[k-1])
-        maxSize[k] = tonumber(maxDims[k-1])
-    end
-    return size, maxSize
-end
-
 --[[ Return a pointer to a NULL hsize_t array ]]
 local function nullSize()
     local size_t = hdf5.ffi.typeof("hsize_t *")
@@ -145,8 +128,8 @@ function HDF5File:write(datapath, data)
 end
 
 function HDF5File:read(datapath)
-    hdf5._logger.debug("Opening " .. tostring(self))
-    hdf5._loadObject(self._fileID, datapath)
+    hdf5._logger.debug("Reading " .. datapath .. " from " .. tostring(self))
+    return hdf5._loadObject(self, self._fileID, datapath)
 end
 
 -- TODO fix or remove

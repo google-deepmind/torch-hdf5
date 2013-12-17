@@ -253,3 +253,9 @@ function hdf5._getTorchType(typeID)
     end
 end
 
+
+function hdf5._getObjectName(objectID)
+    local name = ffi.new('char[255]')
+    hdf5.C.H5Iget_name(objectID, name, 255)
+    return ffi.string(name)
+end
