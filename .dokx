@@ -15,7 +15,7 @@ return {
     packageName = "hdf5",
 
     -- githubURL: string; $githubUser/$githubProject - used for generating links, if present
-    --githubURL = nil,
+    githubURL = "d11/torch-hdf5",
 
     -- section: string; name of the section under which this package should be grouped in the main menu
     section = "Utilities",
