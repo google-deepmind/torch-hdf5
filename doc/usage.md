@@ -4,6 +4,7 @@
 
 ### OS X
 
+    brew tap homebrew/science
     brew install hdf5
     luarocks install hdf5
 
