@@ -1,3 +1,4 @@
+local stringx = require 'pl.stringx'
 
 --[[ Convert from LongStorage containing tensor sizes to an HDF5 hsize_t array ]]
 local function convertSize(size)
