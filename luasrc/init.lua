@@ -13,6 +13,11 @@ hdf5 = {}
 require 'logroll'
 hdf5._logger = logroll.print_logger()
 
+torch.include("hdf5", "config.lua")
+if not hdf5._config then
+    error("Unable to find torch-hdf5 config.lua")
+end
+
 torch.include("hdf5", "ffi.lua")
 torch.include("hdf5", "file.lua")
 torch.include("hdf5", "dataset.lua")
