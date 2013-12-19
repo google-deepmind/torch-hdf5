@@ -80,6 +80,10 @@ function HDF5File:read(datapath)
     return self._rootGroup:read(datapath)
 end
 
+function HDF5File:all()
+    return self:read("/"):all()
+end
+
 --[[ Open or create an HDF5 file.
 
 Parameters:
