@@ -77,10 +77,54 @@ function HDF5File:read(datapath)
     return self._rootGroup:read(datapath)
 end
 
--- TODO fix or remove
-function hdf5.HDF5File.create(filename)
-end
-function hdf5.HDF5File.open(filename)
-    return nil
+--[[ Open or create an HDF5 file.
+
+Parameters:
+* `filename` - path to file
+* `mode` (default `'a'`) - mode of access
+
+Where `mode` is one of the following strings:
+
+* `'a'`  - Read/write if exists; create otherwise
+* `'r'`  - Read-only; file must exist
+* `'r+'` - Read/write; file must exist
+* `'w'`  - Create file; overwrite if exists
+* `'w-'` - Create file; fail if exists
+
+Returns:
+* A new HDF5File object
+
+]]
+function hdf5.HDF5File.open(filename, mode)
+    -- TODO: more control over HDF5 options
+    -- * compression
+    -- * chunking
+
+    local dirname = path.dirname(filename)
+    if not path.isdir(dirname) then
+
+    end
+    if mode == nil or mode == 'a' then
+        if path.exists(filename) then
+            mode = 'r+'
+        else
+            mode = 'w'
+        end
+    end
+    if mode == 'r' then
+        local fileID = hdf5.C.H5Fopen(filename, hdf5.H5F_ACC_RDONLY, hdf5.H5P_DEFAULT)
+        return hdf5.HDF5File(filename, fileID)
+    elseif mode == 'r+' then
+        local fileID = hdf5.C.H5Fopen(filename, hdf5.H5F_ACC_RDRW, hdf5.H5P_DEFAULT, hdf5.H5P_DEFAULT)
+        return hdf5.HDF5File(filename, fileID)
+    elseif mode == 'w' then
+        local fileID = hdf5.C.H5Fcreate(filename, hdf5.H5F_ACC_TRUNC, hdf5.H5P_DEFAULT, hdf5.H5P_DEFAULT)
+        return hdf5.HDF5File(filename, fileID)
+    elseif mode == 'w-' then
+        local fileID = hdf5.C.H5Fcreate(filename, hdf5.H5F_ACC_EXCL, hdf5.H5P_DEFAULT, hdf5.H5P_DEFAULT)
+        return hdf5.HDF5File(filename, fileID)
+    else
+        error("Unknown mode '" .. mode .. "' for hdf5.open()")
+    end
 end
 

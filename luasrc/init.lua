@@ -58,5 +58,9 @@ function hdf5._loadObject(parent, locationID, datapath)
     end
 end
 
+--[[ Shorthand for [hdf5.HDF5File.open()](#hdf5.HDF5File.open). ]]
+function hdf5.open(...)
+    return hdf5.HDF5File.open(...)
+end
 
 return hdf5

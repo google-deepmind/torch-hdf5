@@ -197,21 +197,6 @@ hdf5.H5F_ACC_CREAT  = 0x0010 -- create non-existing files
 hdf5.H5P_DEFAULT = 0
 hdf5.H5S_ALL = 0
 
-function hdf5.open(filename, mode)
-    if mode == 'w' then
-        -- TODO more control over options?
-        -- * compression
-        -- * chunking
-        local fileID = hdf5.C.H5Fcreate(filename, hdf5.H5F_ACC_TRUNC, hdf5.H5P_DEFAULT, hdf5.H5P_DEFAULT)
-        return hdf5.HDF5File(filename, fileID)
-    elseif mode == 'r' then
-        local fileID = hdf5.C.H5Fopen(filename, hdf5.H5F_ACC_RDWR, hdf5.H5P_DEFAULT)
-        return hdf5.HDF5File(filename, fileID)
-    else
-        error("Unknown mode '" .. mode .. "' for hdf5.open()")
-    end
-end
-
 -- This table specifies which exact format a given type of Tensor should be saved as.
 local fileTypeMap = {
     ["torch.ByteTensor"] = hdf5.h5t.STD_U8BE,
