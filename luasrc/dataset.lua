@@ -17,9 +17,15 @@ local function getDataspaceSize(nDims, spaceID)
     return size, maxSize
 end
 
-function HDF5DataSet:__init(parent, datasetID)
+function HDF5DataSet:__init(parent, datasetID, dataspaceID)
+    assert(parent)
+    assert(datasetID)
+    assert(dataspaceID)
     self._parent = parent
     self._datasetID = datasetID
+
+    -- TODO separate
+    self._dataspaceID = dataspaceID
 end
 
 function HDF5DataSet:__tostring()
@@ -57,4 +63,15 @@ function HDF5DataSet:all()
     hdf5.C.H5Dread(self._datasetID, nativeType, hdf5.H5S_ALL, hdf5.H5S_ALL, hdf5.H5P_DEFAULT, dataPtr)
     return tensor
 
+end
+
+function HDF5DataSet:close()
+    local status = hdf5.C.H5Dclose(self._datasetID)
+    if status < 0 then
+        error("Failed closing dataset for " .. tostring(self))
+    end
+    status = hdf5.C.H5Sclose(self._dataspaceID)
+    if status < 0 then
+        error("Failed closing dataspace for " .. tostring(self))
+    end
 end

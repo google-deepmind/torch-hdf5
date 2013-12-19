@@ -23,6 +23,10 @@ torch.include("hdf5", "file.lua")
 torch.include("hdf5", "dataset.lua")
 torch.include("hdf5", "group.lua")
 
+--[[ Call this to enable debug mode. ]]
+function hdf5.debugMode()
+    hdf5._logger.level = 0
+end
 function hdf5._loadObject(parent, locationID, datapath)
     local objectID = hdf5.C.H5Oopen(locationID, datapath, hdf5.H5P_DEFAULT)
     if objectID < 0 then
@@ -43,15 +47,16 @@ function hdf5._loadObject(parent, locationID, datapath)
         if datasetID < 0 then
             error("Unable to read dataset from '" .. datapath .. "' in " .. tostring(parent) .. "!")
         end
-        local dataset = hdf5.HDF5DataSet(parent, datasetID)
+        local dataspaceID = hdf5.C.H5Dget_space(datasetID)
+        if dataspaceID < 0 then
+            error("Unable to get dataspace for dataset '" .. datapath .. "' in " .. tostring(parent) .. "!")
+        end
+        local dataset = hdf5.HDF5DataSet(parent, datasetID, dataspaceID)
         return dataset
     else
         error("Unsupported data type at " .. datapath)
     end
 end
 
-function hdf5.debugMode()
-    hdf5._logger.level = 0
-end
 
 return hdf5

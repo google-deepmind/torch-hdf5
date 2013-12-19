@@ -16,7 +16,7 @@ end
 local function writeAndReread(location, data)
     local got
     local typeIn = type(data)
-    if typeIn == 'userdata' then 
+    if typeIn == 'userdata' then
         typeIn = torch.typename(data) or typeIn
     end
     withTmpDir(function(tmpDir)
@@ -25,14 +25,16 @@ local function writeAndReread(location, data)
         tester:assertne(writeFile, nil, "hdf5.open returned nil")
         writeFile:write(location, data)
         writeFile:close()
+        local cmd = "h5dump " .. filename
         local readFile = hdf5.open(filename, 'r')
-        os.execute("h5dump " .. filename)
         tester:assertne(readFile, nil, "hdf5.open returned nil")
         local data = readFile:read(location)
         got = data:all()
+        readFile:close()
         tester:assertne(got, nil, "hdf5.read returned nil")
         local typeOut = torch.typename(got) or type(got)
         tester:asserteq(typeIn, typeOut, "type read not the same as type written: was " .. typeIn .. "; is " .. typeOut)
+        os.execute(cmd)
     end)
     return got
 end
@@ -69,12 +71,54 @@ local function deepAlmostEq(a, b, epsilon, msg)
     return true
 end
 
+local function writeAndRereadTest(dataPath, testData)
+    local got = writeAndReread(dataPath, testData)
+    local result, msg, a, b = deepAlmostEq(got, testData, 1e-16)
+    tester:assert(result, "data read is not the same as data written: " .. tostring(msg) .. " in "
+                          .. pretty.write(a) .. " (GOT)\n-- VS --\n"
+                          .. pretty.write(b) .. " (EXPECTED)\n")
+end
+
 function myTests:testWriteTableRoot()
     local testData = { data = torch.rand(4, 6) }
     local dataPath = "/"
-    local got = writeAndReread(dataPath, testData)
-    local result, msg, a, b = deepAlmostEq(got, testData, 1e-16)
-    tester:assert(result, "data read is not the same as data written: " .. tostring(msg) .. " in " .. pretty.write(a) .. " (GOT)\n-- VS --\n" .. pretty.write(b) .. " (EXPECTED)\n")
+    writeAndRereadTest(dataPath, testData)
+end
+
+function myTests:testWriteTableNonRoot()
+    local testData = { data = torch.rand(4, 6) }
+    local dataPath = "/group"
+    writeAndRereadTest(dataPath, testData)
+end
+
+function myTests:testWriteTensorRoot()
+    local testData = torch.rand(4, 6)
+    local dataPath = "/data"
+    writeAndRereadTest(dataPath, testData)
+end
+
+function myTests:testWriteTensorNonRoot()
+    local testData = torch.rand(4, 6)
+    local dataPath = "/group/data"
+    writeAndRereadTest(dataPath, testData)
+end
+
+function myTests:testWriteNestedTableRoot()
+    local testData = { group = { data = torch.rand(4, 6) } }
+    local dataPath = "/"
+    writeAndRereadTest(dataPath, testData)
+end
+
+function myTests:testWriteNestedTableNonRoot()
+    local testData = { group2 = { data = torch.rand(4, 6) } }
+    local dataPath = "/group1"
+    writeAndRereadTest(dataPath, testData)
+end
+
+function myTests:testWriteNestedTableDeepPath()
+    local testData = { group4 = { group5 = { data = torch.rand(4, 6) } } }
+    local dataPath = "/group1/group2/group3"
+    writeAndRereadTest(dataPath, testData)
 end
 
 tester:add(myTests)
