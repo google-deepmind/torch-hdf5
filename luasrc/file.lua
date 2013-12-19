@@ -122,7 +122,7 @@ function hdf5.HDF5File.open(filename, mode)
         local fileID = hdf5.C.H5Fopen(filename, hdf5.H5F_ACC_RDONLY, hdf5.H5P_DEFAULT)
         return hdf5.HDF5File(filename, fileID)
     elseif mode == 'r+' then
-        local fileID = hdf5.C.H5Fopen(filename, hdf5.H5F_ACC_RDRW, hdf5.H5P_DEFAULT, hdf5.H5P_DEFAULT)
+        local fileID = hdf5.C.H5Fopen(filename, hdf5.H5F_ACC_RDWR, hdf5.H5P_DEFAULT, hdf5.H5P_DEFAULT)
         return hdf5.HDF5File(filename, fileID)
     elseif mode == 'w' then
         local fileID = hdf5.C.H5Fcreate(filename, hdf5.H5F_ACC_TRUNC, hdf5.H5P_DEFAULT, hdf5.H5P_DEFAULT)
