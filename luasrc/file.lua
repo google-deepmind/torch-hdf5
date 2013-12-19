@@ -68,6 +68,9 @@ function HDF5File:write(datapath, data)
 end
 
 function HDF5File:read(datapath)
+    if not datapath then
+        datapath = "/"
+    end
     hdf5._logger.debug("Reading " .. datapath .. " from " .. tostring(self))
     if datapath:sub(1,1) == "/" then
         datapath = datapath:sub(2)
