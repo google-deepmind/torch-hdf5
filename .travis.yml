@@ -8,13 +8,12 @@ branches:
     - master
 
 install:
+  - echo "==== Installing hdf5 ===="
+  - sudo apt-get install libhdf5-serial-dev hdf5-tools
   - echo "==== Installing dependencies ===="
   - curl -sk https://raw.github.com/torch/ezinstall/master/install-deps | sudo bash
   - echo "==== Installing Torch ===="
   - curl -sk https://raw.github.com/torch/ezinstall/master/install-luajit+torch | sudo bash
-  - echo "==== Installing hdf5 ===="
-  - sudo apt-get clean
-  - sudo apt-get install -f libhdf5-serial-dev hdf5-tools
   - echo "==== Building torch-hdf5, using luarocks ===="
   - sudo luarocks make
 
