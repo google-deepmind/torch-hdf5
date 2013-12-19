@@ -47,7 +47,7 @@ local function intTensorEqual(typename, a, b)
     if torch.typename(a) ~= typename or torch.typename(b) ~= typename then
         error("Expected two tensors of type " .. typename .. "; got " .. torch.typename(a) .. ", " .. torch.typename(b))
     end
-    return a:add(-b):apply(function(x) return math.abs(x) end):sum() == 0
+    return a:add(-b):apply(function(x) return math.abs(tonumber(x)) end):sum() == 0
 end
 
 --[[ Not supported yet
@@ -71,6 +71,13 @@ function myTests:testIntTensor()
     local testData = torch.IntTensor(4, 6):apply(function() k = k + 1; return k end)
     local got = writeAndReread(testData)
     tester:assert(intTensorEqual("torch.IntTensor", got, testData), "Data read does not match data written!")
+end
+
+function myTests:testLongTensor()
+    local k = 0
+    local testData = torch.LongTensor(4, 6):apply(function() k = k + 1; return k end)
+    local got = writeAndReread(testData)
+    tester:assert(intTensorEqual("torch.LongTensor", got, testData), "Data read does not match data written!")
 end
 
 function myTests:testFloatTensor()
