@@ -106,6 +106,10 @@ function hdf5.HDF5File.open(filename, mode)
     -- TODO: more control over HDF5 options
     -- * compression
     -- * chunking
+    if filename:sub(1,2) == "~/" then
+        filename = path.abspath(filename:sub(3))
+    end
+    filename = path.abspath(filename)
 
     local dirname = path.dirname(filename)
     if not path.isdir(dirname) then
