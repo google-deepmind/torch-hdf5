@@ -109,7 +109,7 @@ function hdf5.HDF5File.open(filename, mode)
 
     local dirname = path.dirname(filename)
     if not path.isdir(dirname) then
-
+        error("HDF5File.open: no such directory " .. dirname)
     end
     if mode == nil or mode == 'a' then
         if path.exists(filename) then
