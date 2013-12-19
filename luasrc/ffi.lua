@@ -3,52 +3,60 @@ local stringx = require 'pl.stringx'
 local path = require 'pl.path'
 require 'torchffi'
 
-local libraries = stringx.split(hdf5._config.HDF5_LIBRARIES, ";")
-local hdf5LibPath
-for _, libPath in ipairs(libraries) do
-    local basename = path.basename(libPath)
-    local name, ext = path.splitext(basename)
-    if name == 'libhdf5' then
-        hdf5LibPath = libPath
-        break
+function loadHDF5Library(libraryPaths)
+    local libraries = stringx.split(libraryPaths, ";")
+    local hdf5LibPath
+    for _, libPath in ipairs(libraries) do
+        local basename = path.basename(libPath)
+        local name, ext = path.splitext(basename)
+        if name == 'libhdf5' then
+            hdf5LibPath = libPath
+            break
+        end
     end
-end
 
-if not hdf5LibPath then
-    error("Error: unable to find a valid HDF5 lib path in the config")
-end
-
--- If the path from the config isn't valid, fall back to the default search mechanism
-if not path.isfile(hdf5LibPath) then
-    hdf5._logger.warn("Unable to find the HDF5 lib we were built against - trying to find it elsewhere")
-    hdf5LibPath = "hdf5"
-end
-
-local hdf5lib = ffi.load(hdf5LibPath)
-if not hdf5lib then
-    error("torch-hdf5: unable to load libhdf5!")
-end
-hdf5.C = hdf5lib
-
--- Pass the header file through the C preprocessor once
-local headerPath = path.join(hdf5._config.HDF5_INCLUDE_PATH, "hdf5.h")
-hdf5._logger.debug("Processing header " .. headerPath)
-if not path.isfile(headerPath) then
-    error("Error: unable to locate HDF5 header file at " .. headerPath)
-end
-local process = io.popen("gcc -E " .. headerPath) -- TODO pass -I
-local contents = process:read("*all")
-process:close()
-
--- Strip out the extra junk that GCC returns
-local cdef = ""
-for _, line in ipairs(stringx.splitlines(contents)) do
-    if not stringx.startswith(line, '#') then
-        cdef = cdef .. line .. "\n"
+    if not hdf5LibPath then
+        error("Error: unable to find a valid HDF5 lib path in the config")
     end
+
+    -- If the path from the config isn't valid, fall back to the default search mechanism
+    if not path.isfile(hdf5LibPath) then
+        hdf5._logger.warn("Unable to find the HDF5 lib we were built against - trying to find it elsewhere")
+        hdf5LibPath = "hdf5"
+    end
+
+    local hdf5lib = ffi.load(hdf5LibPath)
+    if not hdf5lib then
+        error("torch-hdf5: unable to load libhdf5!")
+    end
+    return hdf5lib
 end
 
-ffi.cdef(cdef)
+function loadHDF5Header(includePath)
+
+    -- Pass the header file through the C preprocessor once
+    local headerPath = path.join(includePath, "hdf5.h")
+    hdf5._logger.debug("Processing header " .. headerPath)
+    if not path.isfile(headerPath) then
+        error("Error: unable to locate HDF5 header file at " .. headerPath)
+    end
+    local process = io.popen("gcc -E " .. headerPath) -- TODO pass -I
+    local contents = process:read("*all")
+    process:close()
+
+    -- Strip out the extra junk that GCC returns
+    local cdef = ""
+    for _, line in ipairs(stringx.splitlines(contents)) do
+        if not stringx.startswith(line, '#') then
+            cdef = cdef .. line .. "\n"
+        end
+    end
+
+    ffi.cdef(cdef)
+end
+
+hdf5.C = loadHDF5Library(hdf5._config.HDF5_LIBRARIES)
+loadHDF5Header(hdf5._config.HDF5_INCLUDE_PATH)
 
 -- Initialize HDF5
 hdf5.C.H5open()
