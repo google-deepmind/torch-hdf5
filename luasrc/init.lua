@@ -10,8 +10,9 @@ This format is fast and flexible, and is used by many scientific applications (M
 
 hdf5 = {}
 
-require 'logroll'
-hdf5._logger = logroll.print_logger()
+require 'logging.console'
+hdf5._logger = logging.console()
+hdf5._logger:setLevel(logging.WARN)
 
 torch.include("hdf5", "config.lua")
 if not hdf5._config then
@@ -28,7 +29,7 @@ hdf5._debugMode = false
 --[[ Call this to enable debug mode. ]]
 function hdf5.debugMode()
     hdf5._debugMode = true
-    hdf5._logger.level = 0
+    hdf5._logger:setLevel(logging.DEBUG)
 end
 --[[ Return true if we are in debug mode; false otherwise ]]
 function hdf5._inDebugMode()

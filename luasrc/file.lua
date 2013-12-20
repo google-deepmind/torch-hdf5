@@ -13,7 +13,7 @@ function HDF5File:__init(filename, fileID)
     self._filename = filename
     self._fileID = fileID
 
-    hdf5._logger.debug("Opening " .. tostring(self))
+    hdf5._logger:debug("Opening " .. tostring(self))
 
     self._rootGroup = hdf5._loadObject(self, fileID, "/")
     if not self._rootGroup then
@@ -31,10 +31,10 @@ end
 
 function HDF5File:close()
     self._rootGroup:close()
-    hdf5._logger.debug("Closing " .. tostring(self))
+    hdf5._logger:debug("Closing " .. tostring(self))
     local status = hdf5.C.H5Fclose(self._fileID)
     if not status then
-        hdf5._logger.error("Error closing " .. tostring(self))
+        hdf5._logger:error("Error closing " .. tostring(self))
     end
 end
 
@@ -64,7 +64,7 @@ function HDF5File:read(datapath)
     if not datapath then
         datapath = "/"
     end
-    hdf5._logger.debug("Reading " .. datapath .. " from " .. tostring(self))
+    hdf5._logger:debug("Reading " .. datapath .. " from " .. tostring(self))
     if datapath:sub(1,1) == "/" then
         datapath = datapath:sub(2)
     end

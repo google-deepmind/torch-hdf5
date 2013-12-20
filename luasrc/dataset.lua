@@ -26,7 +26,7 @@ function HDF5DataSet:__init(parent, datasetID, dataspaceID)
 
     -- TODO separate
     self._dataspaceID = dataspaceID
-    hdf5._logger.debug("Initialising " .. tostring(self))
+    hdf5._logger:debug("Initialising " .. tostring(self))
 end
 
 function HDF5DataSet:__tostring()
@@ -67,7 +67,7 @@ function HDF5DataSet:all()
 end
 
 function HDF5DataSet:close()
-    hdf5._logger.debug("Closing " .. tostring(self))
+    hdf5._logger:debug("Closing " .. tostring(self))
     local status = hdf5.C.H5Dclose(self._datasetID)
     if status < 0 then
         error("Failed closing dataset for " .. tostring(self))
