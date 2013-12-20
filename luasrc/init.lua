@@ -23,9 +23,14 @@ torch.include("hdf5", "file.lua")
 torch.include("hdf5", "dataset.lua")
 torch.include("hdf5", "group.lua")
 
+hdf5._debugMode = false
 --[[ Call this to enable debug mode. ]]
 function hdf5.debugMode()
+    hdf5._debugMode = true
     hdf5._logger.level = 0
+end
+function hdf5._inDebugMode()
+    return hdf5._debugMode
 end
 function hdf5._loadObject(parent, locationID, datapath)
     local objectID = hdf5.C.H5Oopen(locationID, datapath, hdf5.H5P_DEFAULT)
