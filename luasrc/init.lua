@@ -30,9 +30,21 @@ function hdf5.debugMode()
     hdf5._debugMode = true
     hdf5._logger.level = 0
 end
+--[[ Return true if we are in debug mode; false otherwise ]]
 function hdf5._inDebugMode()
     return hdf5._debugMode
 end
+
+--[[ Read an object from a path and wrap it in an instance of the appropriate class
+
+Parameters:
+* `parent` - wrapper object immediately above the object being loaded, in the hierarchy
+* `locationID` - an HDF5 ID relative to which we are to load the object
+* `datapath` - path to the object to load, relative to the given location
+
+Returns: An HDF5Group or HDF5DataSet object
+
+]]
 function hdf5._loadObject(parent, locationID, datapath)
     local objectID = hdf5.C.H5Oopen(locationID, datapath, hdf5.H5P_DEFAULT)
     if objectID < 0 then
