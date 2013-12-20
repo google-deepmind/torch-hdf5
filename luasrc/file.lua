@@ -1,5 +1,6 @@
 local path = require 'pl.path'
 local stringx = require 'pl.stringx'
+local bit = require 'bit'
 
 local HDF5File = torch.class("hdf5.HDF5File")
 
@@ -134,3 +135,17 @@ function hdf5.HDF5File.open(filename, mode)
     end
 end
 
+function HDF5File:_printOpenObjects()
+    local flags = bit.bor(hdf5.H5F_OBJ_ALL, hdf5.H5F_OBJ_LOCAL)
+    local openCount = tonumber(hdf5.C.H5Fget_obj_count(self._fileID, flags))
+    local objInfo = ""
+    if openCount > 0 then
+        local objList = ffi.new("int[" .. openCount .. "]")
+        hdf5.C.H5Fget_obj_ids(self._fileID, flags, openCount, objList)
+        for k = 0, openCount-1 do
+            objInfo = objInfo .. " * " .. hdf5._describeObject(objList[k]) .. "\n"
+        end
+    end
+    print("File " .. tostring(self) .. " has " .. openCount .. " open objects.\n" .. objInfo)
+    return openCount
+end
