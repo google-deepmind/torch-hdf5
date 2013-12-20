@@ -43,15 +43,6 @@ function HDF5File:write(datapath, data)
     datapath = stringx.split(datapath, "/") -- TODO
     assert(datapath and type(datapath) == 'table', "HDF5File:write() requires a table (data path) as its first parameter")
     assert(data and type(data) == 'userdata' or type(data) == 'table', "HDF5File:write() requires a tensor or table as its second parameter")
-    --[[
-    local components = stringx.split(datapath, "/")
-
-    for k, component in ipairs(components) do
-        local table = {}
-        table[component] = data
-        data = table
-    end
-    ]]
 
     if #datapath == 0 then
         if type(data) == 'table' then
@@ -76,7 +67,6 @@ function HDF5File:read(datapath)
         datapath = datapath:sub(2)
     end
     datapath = stringx.split(datapath, "/") -- TODO
---    return hdf5._loadObject(self, self._fileID, datapath)
     return self._rootGroup:read(datapath)
 end
 
