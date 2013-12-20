@@ -61,8 +61,20 @@ loadHDF5Header(hdf5._config.HDF5_INCLUDE_PATH)
 
 -- Initialize HDF5
 hdf5.C.H5open()
-hdf5.C.H5check_version(1, 8, 12)
+
+local function checkHDF5Version()
+    local maj = ffi.new('unsigned int[1]')
+    local min = ffi.new('unsigned int[1]')
+    local rel = ffi.new('unsigned int[1]')
+    hdf5.C.H5get_libversion(maj, min, rel)
+    if maj[0] ~= 1 or min[0] ~= 8 then
+        error("Unsupported HDF5 version: " .. maj[0] .. "." .. min[0] .. "." .. rel[0])
+    end
+    -- This is disabled as it's a bit too specific
+    -- hdf5.C.H5check_version(1, 8, 12)
+end
 hdf5.ffi = ffi
+checkHDF5Version()
 
 --[[
 
