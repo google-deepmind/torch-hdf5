@@ -1,3 +1,4 @@
+local path = require 'pl.path'
 local stringx = require 'pl.stringx'
 
 local HDF5File = torch.class("hdf5.HDF5File")
