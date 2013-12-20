@@ -30,7 +30,7 @@ function HDF5DataSet:__init(parent, datasetID, dataspaceID)
 end
 
 function HDF5DataSet:__tostring()
-    return "[HDF5DataSet]" --  TODO  .. self:filename() ..
+    return "[HDF5DataSet " .. hdf5._describeObject(self._datasetID) .. "]"
 end
 
 function HDF5DataSet:all()

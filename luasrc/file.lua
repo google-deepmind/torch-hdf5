@@ -24,7 +24,7 @@ function HDF5File:filename()
 end
 
 function HDF5File:__tostring()
-    return "[HDF5File: " .. self:filename() .. "]"
+    return "[HDF5File: " .. hdf5._describeObject(self._fileID) .. " " .. self:filename() .. "]"
 end
 
 function HDF5File:close()

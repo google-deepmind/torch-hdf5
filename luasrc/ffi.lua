@@ -1,4 +1,5 @@
 local ffi = require 'ffi'
+local bit = require 'bit'
 local stringx = require 'pl.stringx'
 local path = require 'pl.path'
 require 'torchffi'
@@ -193,6 +194,20 @@ hdf5.H5F_ACC_EXCL   = 0x0004 -- fail if file already exists
 hdf5.H5F_ACC_DEBUG  = 0x0008 -- print debug info
 hdf5.H5F_ACC_CREAT  = 0x0010 -- create non-existing files
 
+hdf5.H5F_OBJ_FILE     = 0x0001 -- File objects
+hdf5.H5F_OBJ_DATASET  = 0x0002 -- Dataset objects
+hdf5.H5F_OBJ_GROUP    = 0x0004 -- Group objects
+hdf5.H5F_OBJ_DATATYPE = 0x0008 -- Named datatype objects
+hdf5.H5F_OBJ_ATTR     = 0x0010 -- Attribute objects
+hdf5.H5F_OBJ_ALL      = bit.bor(
+        hdf5.H5F_OBJ_FILE,
+        hdf5.H5F_OBJ_DATASET,
+        hdf5.H5F_OBJ_GROUP,
+        hdf5.H5F_OBJ_DATATYPE,
+        hdf5.H5F_OBJ_ATTR
+    )
+hdf5.H5F_OBJ_LOCAL    = 0x0020 -- Restrict search to objects opened through current file ID
+                               -- (as opposed to objects opened through any file ID accessing this file)
 
 hdf5.H5P_DEFAULT = 0
 hdf5.H5S_ALL = 0
@@ -231,15 +246,44 @@ end
 
 -- This table lets us stringify HDF5 datatype classes
 local classMap = {}
-classMap[tonumber(hdf5.h5t.INTEGER)] = 'INTEGER'
-classMap[tonumber(hdf5.h5t.FLOAT)] = 'FLOAT'
-classMap[tonumber(hdf5.h5t.STRING)] = 'STRING'
+classMap[tonumber(hdf5.h5t.NO_CLASS)] =  'NO_CLASS'
+classMap[tonumber(hdf5.h5t.INTEGER)] =   'INTEGER'
+classMap[tonumber(hdf5.h5t.FLOAT)] =     'FLOAT'
+classMap[tonumber(hdf5.h5t.TIME)] =      'TIME'
+classMap[tonumber(hdf5.h5t.STRING)] =    'STRING'
+classMap[tonumber(hdf5.h5t.BITFIELD)] =  'BITFIELD'
+classMap[tonumber(hdf5.h5t.OPAQUE)] =    'OPAQUE'
+classMap[tonumber(hdf5.h5t.COMPOUND)] =  'COMPOUND'
+classMap[tonumber(hdf5.h5t.REFERENCE)] = 'REFERENCE'
+classMap[tonumber(hdf5.h5t.ENUM)] =      'ENUM'
+classMap[tonumber(hdf5.h5t.VLEN)] =      'VLEN'
+classMap[tonumber(hdf5.h5t.ARRAY)] =     'ARRAY'
+classMap[tonumber(hdf5.h5t.NCLASSES)] =  'NCLASSES'
+
+local typeMap = {}
+
+typeMap[tonumber(hdf5.C.H5I_UNINIT)] =      'UNINIT' -- uninitialized type
+typeMap[tonumber(hdf5.C.H5I_BADID)] =       'BADID'    -- invalid Type
+typeMap[tonumber(hdf5.C.H5I_FILE)] =        'FILE'    -- type ID for File objects
+typeMap[tonumber(hdf5.C.H5I_GROUP)] =       'GROUP'          -- type ID for Group objects
+typeMap[tonumber(hdf5.C.H5I_DATATYPE)] =    'DATATYPE'          -- type ID for Datatype objects
+typeMap[tonumber(hdf5.C.H5I_DATASPACE)] =   'DATASPACE'          -- type ID for Dataspace objects
+typeMap[tonumber(hdf5.C.H5I_DATASET)] =     'DATASET'          -- type ID for Dataset objects
+typeMap[tonumber(hdf5.C.H5I_ATTR)] =        'ATTR'          -- type ID for Attribute objects
+typeMap[tonumber(hdf5.C.H5I_REFERENCE)] =   'REFERENCE '          -- type ID for Reference objects
+typeMap[tonumber(hdf5.C.H5I_VFL)] =         'VFL'          -- type ID for virtual file layer
+typeMap[tonumber(hdf5.C.H5I_GENPROP_CLS)] = 'GENPROP_CLS'          -- type ID for generic property list classes
+typeMap[tonumber(hdf5.C.H5I_GENPROP_LST)] = 'GENPROP_LST'          -- type ID for generic property lists
+typeMap[tonumber(hdf5.C.H5I_ERROR_CLASS)] = 'ERROR_CLASS'          -- type ID for error classes
+typeMap[tonumber(hdf5.C.H5I_ERROR_MSG)] =   'ERROR_MSG'          -- type ID for error messages
+typeMap[tonumber(hdf5.C.H5I_ERROR_STACK)] = 'ERROR_STACK'          -- type ID for error stacks
+typeMap[tonumber(hdf5.C.H5I_NTYPES)] =      'NTYPES'           -- number of library types, MUST BE LAST!
 
 function hdf5._datatypeName(typeID)
     local classID = tonumber(hdf5.C.H5Tget_class(typeID))
     local className = classMap[classID]
     if not className then
-        error("Unknown class for type " .. typeID)
+        error("Unknown class for type " .. tostring(typeID))
     end
     return className
 end
@@ -277,4 +321,25 @@ function hdf5._getObjectName(objectID)
     local name = ffi.new('char[255]')
     hdf5.C.H5Iget_name(objectID, name, 255)
     return ffi.string(name)
+end
+
+function hdf5._getObjectType(objectID)
+    local typeID = hdf5.C.H5Iget_type(objectID)
+    if typeID == hdf5.C.H5I_BADID then
+        error("Error getting type for object " .. objectID)
+    end
+    if typeID == hdf5.C.H5I_DATATYPE then
+        return "DATATYPE (" .. hdf5._datatypeName(typeID) .. ")"
+    end
+    local typeName = typeMap[tonumber(typeID)]
+    if not typeName then
+        error("Could not get name for type " .. tostring(typeID))
+    end
+    return typeName
+end
+
+function hdf5._describeObject(objectID)
+    return "(" .. tostring(objectID) .. " "
+           .. hdf5._getObjectName(objectID) .. " "
+           .. hdf5._getObjectType(objectID) .. ")"
 end
