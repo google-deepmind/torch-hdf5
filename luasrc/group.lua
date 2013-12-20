@@ -90,8 +90,9 @@ function HDF5Group:_writeDataSet(locationID, name, tensor)
             hdf5.H5P_DEFAULT,
             torch.data(tensor)
         );
-    -- TODO check status
-
+    if status < 0 then
+        error("Error writing data " .. name .. " to " .. tostring(self))
+    end
 
     local dataset = hdf5.HDF5DataSet(self, datasetID, dataspaceID) -- TODO
     return dataset
