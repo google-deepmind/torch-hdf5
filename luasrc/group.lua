@@ -98,19 +98,6 @@ function HDF5Group:_writeDataSet(locationID, name, tensor)
     return dataset
 end
 
-function HDF5Group:_writeTable(locationID, name, table)
-    for name, v in pairs(table) do
-
-        -- create group for key (or ensure exists)
-        -- TODO
-        local subLocationID = 0
-        error("TODO hdf5._writeTable")
-        self:_writeData(subLocationID, name, v)
-    end
-
-    return hdf5.HDF5Group(self, groupID)
-end
-
 local function isTensor(data)
     return torch.typename(data):sub(-6, -1) == 'Tensor'
 end
@@ -119,7 +106,6 @@ function HDF5Group:_writeData(locationID, name, data)
 
     if type(data) == 'table' then
         error("_writeData should not be used for tables")
---        return self:_writeTable(, name, data)
     elseif type(data) == 'userdata' then
         if isTensor(data) then
             return self:_writeDataSet(locationID, name, data)
