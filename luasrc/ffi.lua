@@ -214,12 +214,12 @@ hdf5.H5S_ALL = 0
 
 -- This table specifies which exact format a given type of Tensor should be saved as.
 local fileTypeMap = {
-    ["torch.ByteTensor"] = hdf5.h5t.STD_U8BE,
-    ["torch.CharTensor"] = hdf5.h5t.STD_I8BE,
-    ["torch.IntTensor"] = hdf5.h5t.STD_I32BE,
-    ["torch.LongTensor"] = hdf5.h5t.STD_I64BE,
-    ["torch.FloatTensor"] = hdf5.h5t.IEEE_F32BE,
-    ["torch.DoubleTensor"] = hdf5.h5t.IEEE_F64BE
+    ["torch.ByteTensor"] = hdf5.h5t.STD_U8LE,
+    ["torch.CharTensor"] = hdf5.h5t.STD_I8LE,
+    ["torch.IntTensor"] = hdf5.h5t.STD_I32LE,
+    ["torch.LongTensor"] = hdf5.h5t.STD_I64LE,
+    ["torch.FloatTensor"] = hdf5.h5t.IEEE_F32LE,
+    ["torch.DoubleTensor"] = hdf5.h5t.IEEE_F64LE
 }
 
 function hdf5._outputTypeForTensorType(tensorType)
