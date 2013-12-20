@@ -3,7 +3,7 @@ local stringx = require 'pl.stringx'
 local path = require 'pl.path'
 require 'torchffi'
 
-function loadHDF5Library(libraryPaths)
+local function loadHDF5Library(libraryPaths)
     local libraries = stringx.split(libraryPaths, ";")
     local hdf5LibPath
     for _, libPath in ipairs(libraries) do
@@ -32,7 +32,7 @@ function loadHDF5Library(libraryPaths)
     return hdf5lib
 end
 
-function loadHDF5Header(includePath)
+local function loadHDF5Header(includePath)
 
     -- Pass the header file through the C preprocessor once
     local headerPath = path.join(includePath, "hdf5.h")
