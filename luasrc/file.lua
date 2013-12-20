@@ -122,18 +122,22 @@ function hdf5.HDF5File.open(filename, mode)
             mode = 'w'
         end
     end
+    local function createFunc(filename, access)
+        local fileID = hdf5.C.H5Fcreate(filename, access, hdf5.H5P_DEFAULT, hdf5.H5P_DEFAULT)
+        return hdf5.HDF5File(filename, fileID)
+    end
+    local function openFunc(filename, access)
+        local fileID = hdf5.C.H5Fopen(filename, access, hdf5.H5P_DEFAULT)
+        return hdf5.HDF5File(filename, fileID)
+    end
     if mode == 'r' then
-        local fileID = hdf5.C.H5Fopen(filename, hdf5.H5F_ACC_RDONLY, hdf5.H5P_DEFAULT)
-        return hdf5.HDF5File(filename, fileID)
+        return openFunc(filename, hdf5.H5F_ACC_RDONLY)
     elseif mode == 'r+' then
-        local fileID = hdf5.C.H5Fopen(filename, hdf5.H5F_ACC_RDWR, hdf5.H5P_DEFAULT, hdf5.H5P_DEFAULT)
-        return hdf5.HDF5File(filename, fileID)
+        return openFunc(filename, hdf5.H5F_ACC_RDWR)
     elseif mode == 'w' then
-        local fileID = hdf5.C.H5Fcreate(filename, hdf5.H5F_ACC_TRUNC, hdf5.H5P_DEFAULT, hdf5.H5P_DEFAULT)
-        return hdf5.HDF5File(filename, fileID)
+        return createFunc(filename, hdf5.H5F_ACC_TRUNC)
     elseif mode == 'w-' then
-        local fileID = hdf5.C.H5Fcreate(filename, hdf5.H5F_ACC_EXCL, hdf5.H5P_DEFAULT, hdf5.H5P_DEFAULT)
-        return hdf5.HDF5File(filename, fileID)
+        return createFunc(filename, hdf5.H5F_ACC_EXCL)
     else
         error("Unknown mode '" .. mode .. "' for hdf5.open()")
     end
