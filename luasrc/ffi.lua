@@ -343,3 +343,33 @@ function hdf5._describeObject(objectID)
            .. hdf5._getObjectName(objectID) .. " "
            .. hdf5._getObjectType(objectID) .. ")"
 end
+
+hdf5.H5Z_FILTER_ERROR       = -1      -- no filter
+hdf5.H5Z_FILTER_NONE        = 0       -- reserved indefinitely
+hdf5.H5Z_FILTER_DEFLATE     = 1       -- deflation like gzip
+hdf5.H5Z_FILTER_SHUFFLE     = 2       -- shuffle the data
+hdf5.H5Z_FILTER_FLETCHER32  = 3       -- fletcher32 checksum of EDC
+hdf5.H5Z_FILTER_SZIP        = 4       -- szip compression
+hdf5.H5Z_FILTER_NBIT        = 5       -- nbit compression
+hdf5.H5Z_FILTER_SCALEOFFSET = 6       -- scale+offset compression
+hdf5.H5Z_FILTER_RESERVED    = 256     -- filter ids below this value are reserved for library use
+hdf5.H5Z_FILTER_MAX         = 65535   -- maximum filter id
+hdf5.H5Z_FILTER_CONFIG_ENCODE_ENABLED = 0x0001
+hdf5.H5Z_FILTER_CONFIG_DECODE_ENABLED = 0x0002
+
+function hdf5._fletcher32Available()
+    local avail = hdf5.C.H5Zfilter_avail(hdf5.H5Z_FILTER_FLETCHER32)
+    if tonumber(avail) ~= 1 then
+        hdf5._logger.warn("Fletcher32 filter not available.")
+        return false
+    end
+    local filterInfo = ffi.new('unsigned int[1]')
+    local status = hdf5.C.H5Zget_filter_info (hdf5.H5Z_FILTER_FLETCHER32, filterInfo)
+    if bit.band(filterInfo[0], hdf5.H5Z_FILTER_CONFIG_ENCODE_ENABLED) == 0 or
+         bit.band(filterInfo[0], hdf5.H5Z_FILTER_CONFIG_DECODE_ENABLED) == 0 then
+        hdf5._logger.warn("Fletcher32 filter not available for encoding and decoding.\n")
+        return false
+    end
+    return true
+end
+
