@@ -1,31 +1,22 @@
 require 'hdf5'
-hdf5.debugMode()
 local pretty = require 'pl.pretty'
 
 local myTests = {}
 local tester = torch.Tester()
 
--- TODO dedup this
-local function withTmpDir(func)
-    local file = io.popen("mktemp -d -t torch_hdf5_XXXXXX")
-    local tmpDir = stringx.strip(file:read("*all"))
-    file:close()
-    func(tmpDir)
-    dir.rmtree(tmpDir)
-end
+local testUtils = hdf5._testUtils
 local function writeAndReread(location, data)
     local got
     local typeIn = type(data)
     if typeIn == 'userdata' then
         typeIn = torch.typename(data) or typeIn
     end
-    withTmpDir(function(tmpDir)
+    testUtils.withTmpDir(function(tmpDir)
         local filename = path.join(tmpDir, "test.h5")
         local writeFile = hdf5.open(filename, 'w')
         tester:assertne(writeFile, nil, "hdf5.open returned nil")
         writeFile:write(location, data)
         writeFile:close()
-        local cmd = "h5dump " .. filename
         local readFile = hdf5.open(filename, 'r')
         tester:assertne(readFile, nil, "hdf5.open returned nil")
         local data = readFile:read(location)
@@ -34,7 +25,6 @@ local function writeAndReread(location, data)
         tester:assertne(got, nil, "hdf5.read returned nil")
         local typeOut = torch.typename(got) or type(got)
         tester:asserteq(typeIn, typeOut, "type read not the same as type written: was " .. typeIn .. "; is " .. typeOut)
-        os.execute(cmd)
     end)
     return got
 end

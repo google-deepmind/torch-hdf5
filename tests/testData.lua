@@ -11,19 +11,12 @@ local stringx = require 'pl.stringx'
 
 local tester = torch.Tester()
 local myTests = {}
-
-local function withTmpDir(func)
-    local file = io.popen("mktemp -d -t torch_hdf5_XXXXXX")
-    local tmpDir = stringx.strip(file:read("*all"))
-    file:close()
-    func(tmpDir)
-    dir.rmtree(tmpDir)
-end
+local testUtils = hdf5._testUtils
 
 local function writeAndReread(data)
     local got
     local typeIn = torch.typename(data)
-    withTmpDir(function(tmpDir)
+    testUtils.withTmpDir(function(tmpDir)
         local filename = path.join(tmpDir, "test.h5")
         local writeFile = hdf5.open(filename, 'w')
         tester:assertne(writeFile, nil, "hdf5.open returned nil")
@@ -35,7 +28,6 @@ local function writeAndReread(data)
         tester:assertne(dataset, nil, "dataset is nil")
         got = dataset:all()
         readFile:close()
-        os.execute("h5dump " .. filename)
         tester:assertne(got, nil, "hdf5.read returned nil")
         local typeOut = torch.typename(got)
         tester:asserteq(typeIn, typeOut, "type read not the same as type written: was " .. typeIn .. "; is " .. typeOut)

@@ -22,6 +22,7 @@ torch.include("hdf5", "ffi.lua")
 torch.include("hdf5", "file.lua")
 torch.include("hdf5", "dataset.lua")
 torch.include("hdf5", "group.lua")
+torch.include("hdf5", "testUtils.lua")
 
 hdf5._debugMode = false
 --[[ Call this to enable debug mode. ]]
