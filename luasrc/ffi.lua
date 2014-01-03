@@ -385,3 +385,12 @@ function hdf5._fletcher32Available()
     return true
 end
 
+function hdf5._deflateAvailable()
+    local avail = hdf5.C.H5Zfilter_avail(hdf5.H5Z_FILTER_DEFLATE)
+    if tonumber(avail) ~= 1 then
+        hdf5._logger:warn("Deflate filter not available.")
+        return false
+    end
+    return true
+end
+
