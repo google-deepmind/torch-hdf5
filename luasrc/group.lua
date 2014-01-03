@@ -59,8 +59,15 @@ function HDF5Group:__tostring()
     return "[HDF5Group " .. self._groupID .. " " .. hdf5._getObjectName(self._groupID) .. "]"
 end
 
-function HDF5Group:_writeDataSet(locationID, name, tensor)
+function HDF5Group:_writeDataSet(locationID, name, tensor, options)
     hdf5._logger:debug("Writing dataset '" .. name .. "' in " .. tostring(self))
+    if not options then
+        options = hdf5.DataSetOptions()
+    end
+
+    options:adjustForData(tensor)
+
+    hdf5._logger:debug("Using options: " .. tostring(options))
     local dims = convertSize(tensor:size())
 
     -- (rank, dims, maxdims)
@@ -72,13 +79,14 @@ function HDF5Group:_writeDataSet(locationID, name, tensor)
     if fileDataType == nil then
         error("Cannot find hdf5 file type for " .. typename)
     end
+    local creationProperties = hdf5.C.H5Pcreate(hdf5.C.H5P_CLS_DATASET_CREATE_g)
     local datasetID = hdf5.C.H5Dcreate2(
             locationID,
             name,
             fileDataType,
             dataspaceID,
             hdf5.H5P_DEFAULT,
-            hdf5.H5P_DEFAULT,
+            options:creationProperties(),
             hdf5.H5P_DEFAULT
         );
 
@@ -102,13 +110,13 @@ local function isTensor(data)
     return torch.typename(data):sub(-6, -1) == 'Tensor'
 end
 
-function HDF5Group:_writeData(locationID, name, data)
+function HDF5Group:_writeData(locationID, name, data, options)
 
     if type(data) == 'table' then
         error("_writeData should not be used for tables")
     elseif type(data) == 'userdata' then
         if isTensor(data) then
-            return self:_writeDataSet(locationID, name, data)
+            return self:_writeDataSet(locationID, name, data, options)
         end
         error("torch-hdf5: writing non-Tensor userdata is not supported")
     end
@@ -132,7 +140,7 @@ function HDF5Group:getOrCreateChild(name)
     return child
 end
 
-function HDF5Group:write(datapath, data)
+function HDF5Group:write(datapath, data, options)
     assert(datapath and type(datapath) == 'table', "HDF5Group:write() expects table as first parameter")
     assert(data, "HDF5Group:write() requires data as parameter")
     if #datapath == 0 then
@@ -146,20 +154,20 @@ function HDF5Group:write(datapath, data)
         for k = 1, #datapath do
             datapath[k] = datapath[k+1]
         end
-        return child:write(datapath, data)
+        return child:write(datapath, data, options)
     end
 
     if type(data) == 'table' then
         local child = self:getOrCreateChild(key)
         for k, v in pairs(data) do
-            child:write({k}, v)
+            child:write({k}, v, options)
         end
         return
     end
 
     hdf5._logger:debug("Writing " .. (torch.typename(data) or type(data))
                        .. " as '" .. key .. "' in " .. tostring(self))
-    local child = self:_writeData(self._groupID, key, data)
+    local child = self:_writeData(self._groupID, key, data, options)
     if not child then
         error("HDF5Group: error writing '" .. key .. "' in " .. tostring(self))
     end

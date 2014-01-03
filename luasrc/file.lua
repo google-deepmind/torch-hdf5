@@ -38,7 +38,7 @@ function HDF5File:close()
     end
 end
 
-function HDF5File:write(datapath, data)
+function HDF5File:write(datapath, data, options)
     if datapath:sub(1,1) == "/" then
         datapath = datapath:sub(2)
     end
@@ -49,7 +49,7 @@ function HDF5File:write(datapath, data)
     if #datapath == 0 then
         if type(data) == 'table' then
             for k, v in pairs(data) do
-                self._rootGroup:write( { k }, v)
+                self._rootGroup:write( { k }, v, options)
             end
             return
         else
@@ -57,7 +57,7 @@ function HDF5File:write(datapath, data)
         end
     end
 
-    self._rootGroup:write(datapath, data)
+    self._rootGroup:write(datapath, data, options)
 end
 
 function HDF5File:read(datapath)
