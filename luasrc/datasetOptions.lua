@@ -1,5 +1,6 @@
 
 local DataSetOptions, parent = torch.class("hdf5.DataSetOptions")
+local stringx = require 'pl.stringx'
 
 function DataSetOptions:__init()
     self._creationProperties = hdf5.C.H5Pcreate(hdf5.C.H5P_CLS_DATASET_CREATE_g)
@@ -46,7 +47,7 @@ end
 
 function DataSetOptions:__tostring()
     local description = "[DataSetOptions:"
-    description = description .. " chunking=" .. stringx.join("x", self._chunking)
+    description = description .. " chunking=" .. (self._chunking and stringx.join("x", self._chunking) or "none")
     description = description .. "]"
     return description
 end

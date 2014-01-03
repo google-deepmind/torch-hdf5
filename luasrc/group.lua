@@ -102,7 +102,7 @@ function HDF5Group:_writeDataSet(locationID, name, tensor, options)
         error("Error writing data " .. name .. " to " .. tostring(self))
     end
 
-    local dataset = hdf5.HDF5DataSet(self, datasetID, dataspaceID) -- TODO
+    local dataset = hdf5.HDF5DataSet(self, datasetID)
     return dataset
 end
 
