@@ -65,6 +65,18 @@ Then:
 
 Alternative libraries for R include **'h5r'** and **'ncdf4'**.
 
+## More advanced usage
+
+You can optionally pass a `DataSetOptions` object to specify how you want data to be written:
+
+    require 'hdf5'
+    local myFile = hdf5.open('/path/to/write.h5', 'w')
+    local options = hdf5.DataSetOptions()
+    options:setChunked(32, 32)
+    options:setDeflate()
+    myFile:write('/path/to/data', torch.rand(500, 500), options)
+    myFile:close()
+
 ## Command-line
 
 There are also a number of handy command-line tools.
@@ -81,7 +93,7 @@ Examine the contents of an HDF5 file and dump those contents to an ASCII file.
 
 Compare two HDF5 files.
 
-### h5copy
+### h5copy
 
 Copies HDF5 objects from a file to a new file
 
