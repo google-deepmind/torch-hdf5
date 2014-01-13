@@ -24,7 +24,7 @@
 
     require 'hdf5'
     local myFile = hdf5.open('/path/to/read.h5', 'r')
-    myFile:read('/path/to/data'):all()
+    local data = myFile:read('/path/to/data'):all()
     myFile:close()
 
 ## Reading from Matlab
