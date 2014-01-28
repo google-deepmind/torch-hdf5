@@ -3,7 +3,7 @@ return {
     --filter = nil,
 
     -- exclude: pattern or table of patterns; file paths to exclude
-    exclude = { 'README', 'tests' },
+    exclude = { 'README', 'tests', 'hdf5.md' },
 
     -- tocLevelTopSection: integer; max depth of table of contents for standalone .md docs
     --tocLevelTopSection = nil,
