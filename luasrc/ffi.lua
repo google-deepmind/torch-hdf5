@@ -22,7 +22,7 @@ local function loadHDF5Library(libraryPaths)
 
     -- If the path from the config isn't valid, fall back to the default search mechanism
     if not path.isfile(hdf5LibPath) then
-        hdf5._logger:warn("Unable to find the HDF5 lib we were built against - trying to find it elsewhere")
+        hdf5._logger.warn("Unable to find the HDF5 lib we were built against - trying to find it elsewhere")
         hdf5LibPath = "hdf5"
     end
 
@@ -37,7 +37,7 @@ local function loadHDF5Header(includePath)
 
     -- Pass the header file through the C preprocessor once
     local headerPath = path.join(includePath, "hdf5.h")
-    hdf5._logger:debug("Processing header " .. headerPath)
+    hdf5._logger.debug("Processing header " .. headerPath)
     if not path.isfile(headerPath) then
         error("Error: unable to locate HDF5 header file at " .. headerPath)
     end
@@ -372,14 +372,14 @@ hdf5.H5Z_FILTER_CONFIG_DECODE_ENABLED = 0x0002
 function hdf5._fletcher32Available()
     local avail = hdf5.C.H5Zfilter_avail(hdf5.H5Z_FILTER_FLETCHER32)
     if tonumber(avail) ~= 1 then
-        hdf5._logger:warn("Fletcher32 filter not available.")
+        hdf5._logger.warn("Fletcher32 filter not available.")
         return false
     end
     local filterInfo = ffi.new('unsigned int[1]')
     local status = hdf5.C.H5Zget_filter_info (hdf5.H5Z_FILTER_FLETCHER32, filterInfo)
     if bit.band(filterInfo[0], hdf5.H5Z_FILTER_CONFIG_ENCODE_ENABLED) == 0 or
          bit.band(filterInfo[0], hdf5.H5Z_FILTER_CONFIG_DECODE_ENABLED) == 0 then
-        hdf5._logger:warn("Fletcher32 filter not available for encoding and decoding.\n")
+        hdf5._logger.warn("Fletcher32 filter not available for encoding and decoding.\n")
         return false
     end
     return true
@@ -388,7 +388,7 @@ end
 function hdf5._deflateAvailable()
     local avail = hdf5.C.H5Zfilter_avail(hdf5.H5Z_FILTER_DEFLATE)
     if tonumber(avail) ~= 1 then
-        hdf5._logger:warn("Deflate filter not available.")
+        hdf5._logger.warn("Deflate filter not available.")
         return false
     end
     return true

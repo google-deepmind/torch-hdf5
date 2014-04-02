@@ -42,7 +42,7 @@ function HDF5DataSet:__init(parent, datasetID)
     self._parent = parent
     self._datasetID = datasetID
     self._dataspaceID = hdf5.C.H5Dget_space(self._datasetID)
-    hdf5._logger:debug("Initialising " .. tostring(self))
+    hdf5._logger.debug("Initialising " .. tostring(self))
 end
 
 function HDF5DataSet:__tostring()
@@ -132,7 +132,7 @@ function HDF5DataSet:partial(...)
         error("Cannot select hyperslab " .. tostring(...) .. " from " .. tostring(self))
     end
 
-    hdf5._logger:debug("HDF5DataSet:partial() - selected "
+    hdf5._logger.debug("HDF5DataSet:partial() - selected "
             .. tostring(hdf5.C.H5Sget_select_npoints(self._dataspaceID)) .. " points"
         )
 
@@ -148,7 +148,7 @@ function HDF5DataSet:partial(...)
 end
 
 function HDF5DataSet:close()
-    hdf5._logger:debug("Closing " .. tostring(self))
+    hdf5._logger.debug("Closing " .. tostring(self))
     local status = hdf5.C.H5Dclose(self._datasetID)
     if status < 0 then
         error("Failed closing dataset for " .. tostring(self))

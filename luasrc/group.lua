@@ -26,7 +26,7 @@ function HDF5Group:__init(parent, groupID)
     self._parent = parent
     self._groupID = groupID
 
-    hdf5._logger:debug("Initialising " .. tostring(self))
+    hdf5._logger.debug("Initialising " .. tostring(self))
 
     if self._groupID < 0 then
         error("Invalid groupID " .. groupID)
@@ -60,14 +60,14 @@ function HDF5Group:__tostring()
 end
 
 function HDF5Group:_writeDataSet(locationID, name, tensor, options)
-    hdf5._logger:debug("Writing dataset '" .. name .. "' in " .. tostring(self))
+    hdf5._logger.debug("Writing dataset '" .. name .. "' in " .. tostring(self))
     if not options then
         options = hdf5.DataSetOptions()
     end
 
     options:adjustForData(tensor)
 
-    hdf5._logger:debug("Using options: " .. tostring(options))
+    hdf5._logger.debug("Using options: " .. tostring(options))
     local dims = convertSize(tensor:size())
 
     -- (rank, dims, maxdims)
@@ -125,7 +125,7 @@ end
 
 function HDF5Group:createChild(name)
     assert(name, "no name given for child")
-    hdf5._logger:debug("Creating child '" .. name .. "' of " .. tostring(self))
+    hdf5._logger.debug("Creating child '" .. name .. "' of " .. tostring(self))
     local childID = hdf5.C.H5Gcreate2(self._groupID, name, hdf5.H5P_DEFAULT, hdf5.H5P_DEFAULT, hdf5.H5P_DEFAULT)
     local child = hdf5.HDF5Group(self, childID)
     self._children[name] = child
@@ -149,7 +149,7 @@ function HDF5Group:write(datapath, data, options)
     local key = datapath[1]
     if #datapath > 1 then
         local child = self:getOrCreateChild(key)
-        hdf5._logger:debug("Descending into child '" .. key
+        hdf5._logger.debug("Descending into child '" .. key
                            .. "' (" .. tostring(child) .. ") of " .. tostring(self))
         for k = 1, #datapath do
             datapath[k] = datapath[k+1]
@@ -165,7 +165,7 @@ function HDF5Group:write(datapath, data, options)
         return
     end
 
-    hdf5._logger:debug("Writing " .. (torch.typename(data) or type(data))
+    hdf5._logger.debug("Writing " .. (torch.typename(data) or type(data))
                        .. " as '" .. key .. "' in " .. tostring(self))
     local child = self:_writeData(self._groupID, key, data, options)
     if not child then
@@ -176,7 +176,7 @@ end
 
 function HDF5Group:read(datapath)
     assert(datapath and type(datapath) == 'table', "HDF5Group:read() expects table as first parameter")
-    hdf5._logger:debug("Reading from " .. tostring(self))
+    hdf5._logger.debug("Reading from " .. tostring(self))
     if not datapath or #datapath == 0 then
         return self
     end
@@ -187,7 +187,7 @@ function HDF5Group:read(datapath)
         error("HDF5Group:read() - no such child '" .. key .. "' for " .. tostring(self))
     end
     if #datapath > 1 then
-        hdf5._logger:debug("Descending into child '" .. key
+        hdf5._logger.debug("Descending into child '" .. key
                            .. "' (" .. tostring(child) .. ") of " .. tostring(self))
         for k = 1, #datapath do
             datapath[k] = datapath[k+1]
@@ -195,7 +195,7 @@ function HDF5Group:read(datapath)
         return child:read(datapath)
     end
 
-    hdf5._logger:debug("Reading " .. tostring(child) .. " as '" .. key .. "' in " .. tostring(self))
+    hdf5._logger.debug("Reading " .. tostring(child) .. " as '" .. key .. "' in " .. tostring(self))
     return child
 end
 
@@ -212,7 +212,7 @@ function HDF5Group:close()
         v:close()
     end
 
-    hdf5._logger:debug("Closing " .. tostring(self))
+    hdf5._logger.debug("Closing " .. tostring(self))
     local status = hdf5.C.H5Gclose(self._groupID)
     if status < 0 then
         error("Error closing " .. tostring(self))

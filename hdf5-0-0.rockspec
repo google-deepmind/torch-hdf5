@@ -14,7 +14,7 @@ description = {
   maintainer = "Dan Horgan <danhgn+github@gmail.com>"
 }
 
-dependencies = { 'torch >= 7.0', 'torchffi', 'lualogging', 'penlight' }
+dependencies = { 'torch >= 7.0', 'torchffi', 'logroll', 'penlight' }
 external_dependencies = { hdf5 = { library = 'hdf5' } }
 build = {
    type = "command",
