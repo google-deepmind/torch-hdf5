@@ -59,6 +59,42 @@ function HDF5Group:__tostring()
     return "[HDF5Group " .. self._groupID .. " " .. hdf5._getObjectName(self._groupID) .. "]"
 end
 
+function HDF5Group:_createDataSet(locationID, name, ...)
+    hdf5._logger.debug("Creating dataset '" .. name .. "' in " .. tostring(self))
+    local size = { ... }
+    local options
+    if type(size[#size]) == 'table' then
+        options = size[#size]
+        size[#size] = nil
+    end
+    if not options then
+        options = hdf5.DataSetOptions()
+    end
+    hdf5._logger.debug("Using options: " .. tostring(options))
+    local dims = convertSize(torch.LongStorage(size))
+    local ndims = #size
+    -- (rank, dims, maxdims)
+    local dataspaceID = hdf5.C.H5Screate_simple(ndims, dims, nullSize());
+    local typename = "torch.DoubleTensor" -- TODO
+    local fileDataType = hdf5._outputTypeForTensorType(typename)
+    local memoryDataType = hdf5._nativeTypeForTensorType(typename)
+    if fileDataType == nil then
+        error("Cannot find hdf5 file type for " .. typename)
+    end
+    local creationProperties = hdf5.C.H5Pcreate(hdf5.C.H5P_CLS_DATASET_CREATE_g)
+    local datasetID = hdf5.C.H5Dcreate2(
+            locationID,
+            name,
+            fileDataType,
+            dataspaceID,
+            hdf5.H5P_DEFAULT,
+            options:creationProperties(),
+            hdf5.H5P_DEFAULT
+        );
+    local dataset = hdf5.HDF5DataSet(self, datasetID)
+    return dataset
+end
+
 function HDF5Group:_writeDataSet(locationID, name, tensor, options)
     hdf5._logger.debug("Writing dataset '" .. name .. "' in " .. tostring(self))
     if not options then
@@ -217,4 +253,32 @@ function HDF5Group:close()
     if status < 0 then
         error("Error closing " .. tostring(self))
     end
+end
+
+function HDF5Group:create(datapath, ...)
+    assert(datapath and type(datapath) == 'table', "HDF5Group:create() expects table as first parameter")
+    if #datapath == 0 then
+        error("HDF5Group: descended too far")
+    end
+
+    -- TODO deduplicate
+    local key = datapath[1]
+    if #datapath > 1 then
+        local child = self:getOrCreateChild(key)
+        hdf5._logger.debug("Descending into child '" .. key
+                           .. "' (" .. tostring(child) .. ") of " .. tostring(self))
+        for k = 1, #datapath do
+            datapath[k] = datapath[k+1]
+        end
+        return child:create(datapath, ...)
+    end
+
+    hdf5._logger.debug("Creating " .. (torch.typename(data) or type(data))
+                       .. " as '" .. key .. "' in " .. tostring(self))
+    local child = self:_createDataSet(self._groupID, key, ...)
+    if not child then
+        error("HDF5Group: error creating '" .. key .. "' in " .. tostring(self))
+    end
+    self._children[key] = child
+    return child
 end

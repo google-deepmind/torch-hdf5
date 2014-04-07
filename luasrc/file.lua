@@ -149,3 +149,17 @@ function HDF5File:_printOpenObjects()
     print("File " .. tostring(self) .. " has " .. openCount .. " open objects.\n" .. objInfo)
     return openCount
 end
+
+function HDF5File:create(datapath, ...)
+    if datapath:sub(1, 1) == "/" then
+        datapath = datapath:sub(2)
+    end
+    datapath = stringx.split(datapath, "/") -- TODO
+    assert(datapath and type(datapath) == 'table', "HDF5File:write() requires a table (data path) as its first parameter")
+
+    if #datapath == 0 then
+        error("HDF5File:create() - cannot create a dataset with no name")
+    end
+
+    return self._rootGroup:create(datapath, ...)
+end

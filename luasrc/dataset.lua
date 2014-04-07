@@ -158,3 +158,45 @@ function HDF5DataSet:close()
         error("Failed closing dataspace for " .. tostring(self))
     end
 end
+
+function HDF5DataSet:write(tensor, ...)
+    hdf5._logger.debug("HDF5DataSet:write()", tostring(self), ...)
+    local indices = {...}
+    if #indices ~= tensor:nDimension() then
+        error("HDF5DataSet:write() - dimension mismatch. Expected " .. tensor:nDimension() .. " but " .. #indices .. " were given.")
+    end
+    local ranges = {}
+    for k, start in pairs(indices) do
+        ranges[k] = {start, start + tensor:size(k) - 1}
+    end
+    local nDims = hdf5.C.H5Sget_simple_extent_ndims(self._dataspaceID)
+    if #ranges ~= nDims then
+        error("HDF5DataSet:write() - dimension mismatch. Expected " .. nDims .. " but " .. #ranges .. " were given.")
+    end
+    -- TODO dedup. also, no need to go to 'ranges'... :-/
+    local null = hdf5.ffi.new("hsize_t *")
+    local offset, count = rangesToOffsetAndCount(ranges)
+
+    -- TODO clone space first?
+    local stride = null
+    local status = hdf5.C.H5Sselect_hyperslab(self._dataspaceID, hdf5.C.H5S_SELECT_SET, offset, stride, count, null)
+    if status < 0 then
+        error("Cannot select hyperslab " .. tostring(...) .. " from " .. tostring(self))
+    end
+    hdf5._logger.debug("HDF5DataSet:write() - selected "
+            .. tostring(hdf5.C.H5Sget_select_npoints(self._dataspaceID)) .. " points"
+        )
+    local tensorDataspace = createTensorDataspace(tensor)
+    -- Write data from the tensor
+    local dataPtr = torch.data(tensor)
+    -- Dedup
+    local typeID = hdf5.C.H5Dget_type(self._datasetID)
+    local nativeType = hdf5.C.H5Tget_native_type(typeID, hdf5.C.H5T_DIR_ASCEND)
+
+    status = hdf5.C.H5Dwrite(self._datasetID, nativeType, tensorDataspace, self._dataspaceID, hdf5.H5P_DEFAULT, dataPtr)
+    if status < 0 then
+        error("HDF5DataSet:write() - failed writing data to " .. tostring(self))
+    end
+    -- TODO delete tensor dataspace?
+    return self
+end
