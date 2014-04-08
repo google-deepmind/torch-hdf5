@@ -33,12 +33,11 @@ function myTests:testCreate()
         expected[{{2, 3}, {2, 3}}]:fill(1)
         local got = loaded:read("data"):all()
         tester:assertTensorEq(expected, got, 1e-16, "expected zeros with a block of ones")
-        h5file:close()
-
+        loaded:close()
         local reopened = hdf5.open(h5filename)
         local reloaded = reopened:read("data"):all()
         tester:assertTensorEq(expected, reloaded, 1e-16, "expected zeros with a block of ones")
-        h5file:close()
+        reopened:close()
     end)
 end
 
