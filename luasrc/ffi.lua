@@ -328,9 +328,12 @@ function hdf5._getTorchType(typeID)
     end
 end
 
-
 function hdf5._getObjectName(objectID)
     local name = ffi.new('char[255]')
+    if hdf5.C.H5Iis_valid(objectID) == 0 then
+       error("hdf5._getObjectName: invalid objectID " .. tostring(objectID) .. " given")
+    end
+
     hdf5.C.H5Iget_name(objectID, name, 255)
     return ffi.string(name)
 end

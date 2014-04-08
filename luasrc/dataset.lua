@@ -38,7 +38,7 @@ end
 
 function HDF5DataSet:__init(parent, datasetID)
     assert(parent)
-    assert(datasetID)
+    assert(datasetID and hdf5.C.H5Iis_valid(datasetID) ~= 0)
     self._parent = parent
     self._datasetID = datasetID
     self._dataspaceID = hdf5.C.H5Dget_space(self._datasetID)
