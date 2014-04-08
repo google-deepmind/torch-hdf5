@@ -160,6 +160,7 @@ function HDF5DataSet:close()
 end
 
 function HDF5DataSet:write(tensor, ...)
+    assert(tensor, "must provide a tensor to write")
     hdf5._logger.debug("HDF5DataSet:write()", tostring(self), ...)
     local indices = {...}
     if #indices ~= tensor:nDimension() then
