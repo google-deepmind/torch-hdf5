@@ -73,7 +73,6 @@ function HDF5Group:_createDataSet(locationID, name, ...)
     hdf5._logger.debug("Using options: " .. tostring(options))
     local dims = convertSize(torch.LongStorage(size))
     local ndims = #size
-    -- (rank, dims, maxdims)
     local dataspaceID = hdf5.C.H5Screate_simple(ndims, dims, nullSize());
     local typename = "torch.DoubleTensor" -- TODO
     local fileDataType = hdf5._outputTypeForTensorType(typename)
