@@ -2,7 +2,6 @@ local ffi = require 'ffi'
 local bit = require 'bit'
 local stringx = require 'pl.stringx'
 local path = require 'pl.path'
-require 'torchffi'
 
 local function loadHDF5Library(libraryPaths)
     local libraries = stringx.split(libraryPaths, ";")
