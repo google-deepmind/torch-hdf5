@@ -15,7 +15,7 @@ description = {
 }
 
 dependencies = { 'torch >= 7.0', 'logroll', 'penlight' }
-external_dependencies = { hdf5 = { library = 'hdf5' } }
+external_dependencies = { LIBHDF5 = { library = 'hdf5' } }
 build = {
    type = "command",
    build_command = [[

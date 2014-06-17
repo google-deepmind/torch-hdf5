@@ -8,10 +8,14 @@
     brew install hdf5
     luarocks install hdf5
 
-### Ubuntu
+### Ubuntu < 13.04
 
     sudo apt-get install libhdf5-serial-dev hdf5-tools
     luarocks install hdf5
+
+### Ubuntu >= 13.04
+    sudo apt-get install libhdf5-serial-dev hdf5-tools
+    luarocks install hdf5 LIBHDF5_LIBDIR="/usr/lib/x86_64-linux-gnu/"
 
 ## Writing from torch
 
