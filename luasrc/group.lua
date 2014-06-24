@@ -1,4 +1,5 @@
 local stringx = require 'pl.stringx'
+local ffi = require 'ffi'
 
 local HDF5Group = torch.class("hdf5.HDF5Group")
 
