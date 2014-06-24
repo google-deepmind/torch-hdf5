@@ -1,6 +1,7 @@
 local path = require 'pl.path'
 local stringx = require 'pl.stringx'
 local bit = require 'bit'
+local ffi = require 'ffi'
 
 local HDF5File = torch.class("hdf5.HDF5File")
 
