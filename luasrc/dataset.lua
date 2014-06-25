@@ -59,7 +59,7 @@ function HDF5DataSet:all()
     local tensor = factory():resize(unpack(size))
 
     -- Read data into the tensor
-    local dataPtr = torch.data(tensor)
+    local dataPtr = tensor:data()
     local status = hdf5.C.H5Dread(self._datasetID, nativeType, hdf5.H5S_ALL, hdf5.H5S_ALL, hdf5.H5P_DEFAULT, dataPtr)
 
     if status < 0 then
@@ -138,7 +138,7 @@ function HDF5DataSet:partial(...)
 
     local tensorDataspace = createTensorDataspace(tensor)
     -- Read data into the tensor
-    local dataPtr = torch.data(tensor)
+    local dataPtr = tensor:data()
     status = hdf5.C.H5Dread(self._datasetID, nativeType, tensorDataspace, self._dataspaceID, hdf5.H5P_DEFAULT, dataPtr)
     if status < 0 then
         error("HDF5DataSet:partial() - failed reading data from " .. tostring(self))
