@@ -63,7 +63,7 @@ Returns:
 ]]
 function DataSetOptions:setChunked(...)
     local chunking = { ... }
-    local chunkDims = ffi.new("hsize_t[" .. #chunking .. "]")
+    local chunkDims = hdf5.ffi.new("hsize_t[" .. #chunking .. "]")
     for k, size in ipairs(chunking) do
         chunkDims[k-1] = size
     end

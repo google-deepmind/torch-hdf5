@@ -140,7 +140,7 @@ function HDF5File:_printOpenObjects()
     local openCount = tonumber(hdf5.C.H5Fget_obj_count(self._fileID, flags))
     local objInfo = ""
     if openCount > 0 then
-        local objList = ffi.new("int[" .. openCount .. "]")
+        local objList = hdf5.ffi.new("int[" .. openCount .. "]")
         hdf5.C.H5Fget_obj_ids(self._fileID, flags, openCount, objList)
         for k = 0, openCount-1 do
             objInfo = objInfo .. " * " .. hdf5._describeObject(objList[k]) .. "\n"

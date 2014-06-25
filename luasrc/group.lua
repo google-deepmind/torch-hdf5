@@ -45,13 +45,13 @@ function HDF5Group:__init(parent, groupID)
             self._groupID,
             hdf5.C.H5_INDEX_NAME,
             hdf5.C.H5_ITER_NATIVE,
-            ffi.new("hsize_t *"),
+	    hdf5.ffi.new("hsize_t *"),
             function(baseGroupID, linkName, linkInfo, data)
-                linkName = ffi.string(linkName)
+                linkName = hdf5.ffi.string(linkName)
                 self._children[linkName] = hdf5._loadObject(self, baseGroupID, linkName)
                 return 0
             end,
-            ffi.new("void *")
+            hdf5.ffi.new("void *")
         )
 end
 
