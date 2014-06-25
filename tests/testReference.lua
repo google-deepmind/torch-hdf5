@@ -1,6 +1,8 @@
 require 'hdf5'
 local dir = require 'pl.dir'
 local pretty = require 'pl.pretty'
+local path = require 'pl.path'
+local stringx = require 'pl.stringx'
 local myTests = {}
 local tester = torch.Tester()
 local dataDir = path.join(path.dirname(debug.getinfo(1).source:sub(2)), "data")

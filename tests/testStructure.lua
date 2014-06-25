@@ -1,5 +1,6 @@
 require 'hdf5'
 local pretty = require 'pl.pretty'
+local path = require 'pl.path'
 
 local myTests = {}
 local tester = torch.Tester()
