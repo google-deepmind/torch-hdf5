@@ -8,8 +8,6 @@ branches:
     - master
 
 install:
-  - echo "==== Installing luarocks ===="
-  - sudo apt-get install luarocks
   - echo "==== Installing hdf5 ===="
   - sudo apt-get install libhdf5-serial-dev hdf5-tools
   - echo "==== Installing dependencies ===="
@@ -17,7 +15,7 @@ install:
   - echo "==== Installing Torch ===="
   - curl -sk https://raw.github.com/torch/ezinstall/master/install-luajit+torch | sudo bash
   - echo "==== Building torch-hdf5, using luarocks ===="
-  - sudo luarocks make
+  - sudo /usr/local/bin/luarocks make
 
 script: 'for x in tests/test*.lua ; do echo "==== $x ====" ; th $x ; done'
 
