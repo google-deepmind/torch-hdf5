@@ -8,6 +8,8 @@ branches:
     - master
 
 install:
+  - echo "==== Installing gfortran ===="
+  - sudo apt-get install gfortran
   - echo "==== Installing hdf5 ===="
   - sudo apt-get install libhdf5-serial-dev hdf5-tools
   - echo "==== Installing dependencies ===="
