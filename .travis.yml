@@ -13,9 +13,9 @@ install:
   - echo "==== Installing hdf5 ===="
   - sudo apt-get install libhdf5-serial-dev hdf5-tools
   - echo "==== Installing dependencies ===="
-  - curl -kL https://raw.github.com/torch/ezinstall/master/install-deps | tee /dev/tty | sudo bash -x
+  - curl -skL https://raw.github.com/torch/ezinstall/master/install-deps | sudo bash
   - echo "==== Installing Torch ===="
-  - curl -kL https://raw.github.com/torch/ezinstall/master/install-luajit+torch | tee /dev/tty | sudo bash -x
+  - curl -skL https://raw.github.com/torch/ezinstall/master/install-luajit+torch | sudo bash
   - echo "==== Building torch-hdf5, using luarocks ===="
   - sudo /usr/local/bin/luarocks make
 
