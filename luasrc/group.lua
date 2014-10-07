@@ -1,4 +1,5 @@
 local stringx = require 'pl.stringx'
+local ffi = require 'ffi'
 
 local HDF5Group = torch.class("hdf5.HDF5Group")
 
@@ -41,18 +42,22 @@ function HDF5Group:__init(parent, groupID)
 
     -- Create a wrapper object for each child of this group
     self._children = {}
+    local callback = ffi.cast("H5L_iterate_t",
+        function(baseGroupID, linkName, linkInfo, data)
+            linkName = hdf5.ffi.string(linkName)
+            self._children[linkName] =
+                hdf5._loadObject(self, baseGroupID, linkName)
+            return 0
+        end)
     hdf5.C.H5Literate(
             self._groupID,
             hdf5.C.H5_INDEX_NAME,
             hdf5.C.H5_ITER_NATIVE,
-	    hdf5.ffi.new("hsize_t *"),
-            function(baseGroupID, linkName, linkInfo, data)
-                linkName = hdf5.ffi.string(linkName)
-                self._children[linkName] = hdf5._loadObject(self, baseGroupID, linkName)
-                return 0
-            end,
+            hdf5.ffi.new("hsize_t *"),
+            callback,
             hdf5.ffi.new("void *")
         )
+    callback:free()
 end
 
 function HDF5Group:__tostring()
