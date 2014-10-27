@@ -1,9 +1,10 @@
 require 'hdf5'
 local pretty = require 'pl.pretty'
 local path = require 'pl.path'
+local totem = require 'totem'
 
 local myTests = {}
-local tester = torch.Tester()
+local tester = totem.Tester()
 
 local testUtils = hdf5._testUtils
 local function writeAndReread(location, data)
@@ -112,6 +113,4 @@ function myTests:testWriteNestedTableDeepPath()
     writeAndRereadTest(dataPath, testData)
 end
 
-tester:add(myTests)
-tester:run()
-os.exit(#tester.errors)
+tester:add(myTests):run()

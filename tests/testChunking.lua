@@ -6,7 +6,8 @@ Test chunking options.
 
 require 'hdf5'
 local path = require 'pl.path'
-local tester = torch.Tester()
+local totem = require 'totem'
+local tester = totem.Tester()
 local myTests = {}
 local testUtils = hdf5._testUtils
 
@@ -64,7 +65,7 @@ function myTests:testReadPartial()
         do
             local selection = { 3, { 1, 4 } }
             local read = h5readFile:read("data"):partial(unpack(selection))
-            tester:assertTensorEq(read, data[selection], 1e-16, "Partial read returned wrong data")
+            tester:assertTensorEq(read:resize(4), data[selection], 1e-16, "Partial read returned wrong data")
         end
         do
             local selection = { {1, 13}, { 1, 13 } }
@@ -79,7 +80,7 @@ function myTests:testReadPartial()
         do
             local selection = { 13, 13 }
             local read = h5readFile:read("data"):partial(unpack(selection))
-            tester:assertTensorEq(read, data[selection], 1e-16, "Partial read returned wrong data")
+            tester:assertTensorEq(read, torch.Tensor{{data[selection]}}, 1e-16, "Partial read returned wrong data")
         end
         do
             local selection = { 13, 13, 1 }
@@ -96,6 +97,4 @@ function myTests:testReadPartial()
     end)
 end
 
-tester:add(myTests)
-tester:run()
-os.exit(#tester.errors)
+tester:add(myTests):run()
