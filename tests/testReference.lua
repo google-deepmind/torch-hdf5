@@ -4,7 +4,8 @@ local pretty = require 'pl.pretty'
 local path = require 'pl.path'
 local stringx = require 'pl.stringx'
 local myTests = {}
-local tester = torch.Tester()
+local totem = require 'totem'
+local tester = totem.Tester()
 local dataDir = path.join(path.dirname(debug.getinfo(1).source:sub(2)), "data")
 
 local testUtils = hdf5._testUtils
@@ -78,6 +79,4 @@ function myTests.testAgainstReferenceRead()
     end)
 end
 
-tester:add(myTests)
-tester:run()
-os.exit(#tester.errors)
+tester:add(myTests):run()

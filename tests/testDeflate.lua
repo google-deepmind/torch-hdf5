@@ -5,7 +5,8 @@ Test with DEFLATE compression filter.
 ]]
 require 'hdf5'
 local path = require 'pl.path'
-local tester = torch.Tester()
+local totem = require 'totem'
+local tester = totem.Tester()
 local myTests = {}
 local testUtils = hdf5._testUtils
 
@@ -31,6 +32,4 @@ function myTests:testDeflate()
     end)
 end
 
-tester:add(myTests)
-tester:run()
-os.exit(#tester.errors)
+tester:add(myTests):run()
