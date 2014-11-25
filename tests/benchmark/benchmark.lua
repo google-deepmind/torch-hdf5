@@ -11,7 +11,7 @@ for n = 1, 27 do
     local normalTime = torch.toc(t)
     t = torch.tic()
     local hdf5file = hdf5.open("out.h5", 'w')
-    hdf5file:set("foo", data)
+    hdf5file["foo"] = data
     hdf5file:close()
     local hdf5time = torch.toc(t)
     print(n, "\t", normalTime,"\t", hdf5time)
