@@ -2,20 +2,29 @@
 
 ## Installation
 
+**** Please note: the central luarocks server has another package called hdf5 (http://colberg.org/lua-hdf5/) - if you use 'luarocks install' you may get that one instead. ****
+
 ### OS X
 
     brew tap homebrew/science
     brew install hdf5
-    luarocks install hdf5
+    git clone git@github.com:deepmind/torch-hdf5.git
+    cd torch-hdf5
+    luarocks make hdf5-0-0.rockspec
 
 ### Ubuntu < 13.04
 
     sudo apt-get install libhdf5-serial-dev hdf5-tools
-    luarocks install hdf5
+    git clone git@github.com:deepmind/torch-hdf5.git
+    cd torch-hdf5
+    luarocks make hdf5-0-0.rockspec
 
 ### Ubuntu >= 13.04
+
     sudo apt-get install libhdf5-serial-dev hdf5-tools
-    luarocks install hdf5 LIBHDF5_LIBDIR="/usr/lib/x86_64-linux-gnu/"
+    git clone git@github.com:deepmind/torch-hdf5.git
+    cd torch-hdf5
+    luarocks make hdf5-0-0.rockspec LIBHDF5_LIBDIR="/usr/lib/x86_64-linux-gnu/"
 
 ## Writing from torch
 
