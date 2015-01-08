@@ -39,25 +39,33 @@ function HDF5File:close()
 end
 
 function HDF5File:write(datapath, data, options)
+    self:_write_or_append("write", datapath, data, options)
+end
+
+function HDF5File:append(datapath, data, options)
+    self:_write_or_append("append", datapath, data, options)
+end
+
+function HDF5File:_write_or_append(method, datapath, data, options)
     if datapath:sub(1,1) == "/" then
-        datapath = datapath:sub(2)
+      datapath = datapath:sub(2)
     end
     datapath = stringx.split(datapath, "/") -- TODO
-    assert(datapath and type(datapath) == 'table', "HDF5File:write() requires a table (data path) as its first parameter")
-    assert(data and type(data) == 'userdata' or type(data) == 'table', "HDF5File:write() requires a tensor or table as its second parameter")
+    assert(datapath and type(datapath) == 'table', "HDF5File:" .. method .. "() requires a table (data path) as its first parameter")
+    assert(data and type(data) == 'userdata' or type(data) == 'table', "HDF5File:" .. method .. "() requires a tensor or table as its second parameter")
 
     if #datapath == 0 then
         if type(data) == 'table' then
             for k, v in pairs(data) do
-                self._rootGroup:write( { k }, v, options)
+                self._rootGroup[method](self._rootGroup, { k }, v, options)
             end
-            return
-        else
-            error("HDF5File:write() - must provide a table when writing to the root location")
-        end
+          return
+      else
+          error("HDF5File:write() - must provide a table when writing to the root location")
+      end
     end
 
-    self._rootGroup:write(datapath, data, options)
+    self._rootGroup[method](self._rootGroup, datapath, data, options)
 end
 
 function HDF5File:read(datapath)
