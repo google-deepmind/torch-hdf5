@@ -196,6 +196,11 @@ function HDF5Group:_appendDataSet(locationID, name, tensor, options)
     error("Error writing to hyperslab for data " .. name .. " to " .. tostring(self))
   end
 
+  status = hdf5.C.H5Sclose(memspaceID)
+  if status < 0 then
+    error("Failed closing memspace when appending for " .. tostring(self))
+  end
+
   return dataset
 end
 
