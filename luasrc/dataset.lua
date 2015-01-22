@@ -46,6 +46,8 @@ function HDF5DataSet:__init(parent, datasetID)
 end
 
 function HDF5DataSet:_refresh_dataspace()
+    local status = hdf5.C.H5Sclose(self._dataspaceID)
+    assert(status >= 0, "error refreshing dataspace")
     self._dataspaceID = hdf5.C.H5Dget_space(self._datasetID)
     return self._dataspaceID
 end
