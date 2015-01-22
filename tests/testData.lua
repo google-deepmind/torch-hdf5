@@ -88,4 +88,4 @@ function myTests:testDoubleTensor()
     tester:assertTensorEq(got, testData, 1e-32, "Data read does not match data written!")
 end
 
-tester:add(myTests):run()
+return tester:add(myTests):run()

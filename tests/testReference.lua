@@ -79,4 +79,4 @@ function myTests.testAgainstReferenceRead()
     end)
 end
 
-tester:add(myTests):run()
+return tester:add(myTests):run()

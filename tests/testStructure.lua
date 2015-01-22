@@ -113,4 +113,4 @@ function myTests:testWriteNestedTableDeepPath()
     writeAndRereadTest(dataPath, testData)
 end
 
-tester:add(myTests):run()
+return tester:add(myTests):run()

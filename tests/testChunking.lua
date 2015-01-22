@@ -97,4 +97,4 @@ function myTests:testReadPartial()
     end)
 end
 
-tester:add(myTests):run()
+return tester:add(myTests):run()
