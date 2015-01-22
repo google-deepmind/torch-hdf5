@@ -7,23 +7,19 @@ branches:
   only:
     - master
 
-install:
-  - echo "==== Installing gfortran ===="
-  - sudo apt-get install gfortran
-  - echo "==== Installing hdf5 ===="
-  - sudo apt-get install libhdf5-serial-dev hdf5-tools
-  - echo "==== Installing dependencies ===="
-  - curl -skL https://raw.github.com/torch/ezinstall/master/install-deps | sudo bash
-  - echo "==== Installing Torch ===="
-  - curl -skL https://raw.github.com/torch/ezinstall/master/install-luajit+torch | sudo bash
+before_script:
+  - sudo apt-get update -qq >/dev/null
+  - sudo apt-get install -qq gfortran  >/dev/null
+  - sudo apt-get install -qq  gcc-multilib gfortran-multilib  >/dev/null
+  - sudo apt-get install -qq liblapack-dev >/dev/null
+  - sudo apt-get install libhdf5-serial-dev hdf5-tools >/dev/null
+  - curl -s https://raw.githubusercontent.com/torch/ezinstall/master/install-all | bash
   - echo "==== Building torch-hdf5, using luarocks ===="
   - sudo /usr/local/bin/luarocks make
 
 script: 'for x in tests/test*.lua ; do echo "==== $x ====" ; th $x ; done'
 
 notifications:
-  recipients:
-    - danhgn@gmail.com
   email:
     on_success: change
     on_failure: always
