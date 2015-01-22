@@ -84,7 +84,7 @@ function HDF5Group:_writeDataSet(locationID, name, tensor, options)
     if fileDataType == nil then
         error("Cannot find hdf5 file type for " .. typename)
     end
-    local creationProperties = hdf5.C.H5Pcreate(hdf5.C.H5P_CLS_DATASET_CREATE_g)
+    local creationProperties = hdf5.C.H5Pcreate(hdf5.C.H5P_CLS_DATASET_CREATE_ID_g)
     local datasetID = hdf5.C.H5Dcreate2(
             locationID,
             name,
