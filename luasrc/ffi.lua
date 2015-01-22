@@ -222,6 +222,8 @@ hdf5.H5F_OBJ_LOCAL    = 0x0020 -- Restrict search to objects opened through curr
 
 hdf5.H5P_DEFAULT = 0
 hdf5.H5S_ALL = 0
+hdf5.H5F_UNLIMITED = ffi.new('hsize_t', -1)
+hdf5.H5S_SELECT_SET = 0
 
 -- This table specifies which exact format a given type of Tensor should be saved as.
 local fileTypeMap = {
