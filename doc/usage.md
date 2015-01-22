@@ -4,6 +4,8 @@
 
 **** Please note: the central luarocks server has another package called hdf5 (http://colberg.org/lua-hdf5/) - if you use 'luarocks install' you may get that one instead. ****
 
+**** Please note also: torch-hdf5 now requires version 1.8.14 or greater of hdf5! ****
+
 ### OS X
 
     brew tap homebrew/science
