@@ -4,8 +4,16 @@ local ffi = require 'ffi'
 local HDF5Group = torch.class("hdf5.HDF5Group")
 
 --[[ Convert from LongStorage containing tensor sizes to an HDF5 hsize_t array ]]
+
 local function convertSize(size)
-    local nDims = size:size()
+    local nDims
+
+    if type(size) == 'table' then
+      nDims = #size
+    else
+      nDims = size:size()
+    end
+ 
     local size_t = hdf5.ffi.typeof("hsize_t[" .. nDims .. "]")
     local hdf5_size = size_t()
     for k = 1, nDims do
@@ -74,13 +82,17 @@ function HDF5Group:_writeDataSet(locationID, name, tensor, options)
 
     hdf5._logger.debug("Using options: " .. tostring(options))
     local dims = convertSize(tensor:size())
+    local maxDims = convertSize(tensor:size())
+    
+    if options._chunking then
+      maxDims[0] = hdf5.H5F_UNLIMITED -- array is zero indexed
+    end
 
     -- (rank, dims, maxdims)
-    local dataspaceID = hdf5.C.H5Screate_simple(tensor:nDimension(), dims, nullSize());
+    local dataspaceID = hdf5.C.H5Screate_simple(tensor:nDimension(), dims, maxDims);
 
     local typename = torch.typename(tensor)
     local fileDataType = hdf5._outputTypeForTensorType(typename)
-    local memoryDataType = hdf5._nativeTypeForTensorType(typename)
     if fileDataType == nil then
         error("Cannot find hdf5 file type for " .. typename)
     end
@@ -95,6 +107,20 @@ function HDF5Group:_writeDataSet(locationID, name, tensor, options)
             hdf5.H5P_DEFAULT
         );
 
+
+    local status = self:_writeTensorToDataSet(datasetID, tensor)
+
+    if status < 0 then
+        error("Error writing data " .. name .. " to " .. tostring(self))
+    end
+
+    local dataset = hdf5.HDF5DataSet(self, datasetID)
+    return dataset
+end
+
+function HDF5Group:_writeTensorToDataSet(datasetID, tensor)
+    local typename = torch.typename(tensor)
+    local memoryDataType = hdf5._nativeTypeForTensorType(typename)
     local status = hdf5.C.H5Dwrite(
             datasetID,
             memoryDataType,
@@ -103,12 +129,79 @@ function HDF5Group:_writeDataSet(locationID, name, tensor, options)
             hdf5.H5P_DEFAULT,
             tensor:data()
         );
-    if status < 0 then
-        error("Error writing data " .. name .. " to " .. tostring(self))
-    end
+    return status
+end
 
-    local dataset = hdf5.HDF5DataSet(self, datasetID)
-    return dataset
+-- http://www.hdfgroup.org/ftp/HDF5/current/src/unpacked/examples/h5_extend.c
+function HDF5Group:_appendDataSet(locationID, name, tensor, options)
+  local status
+  local datasetID = hdf5.C.H5Dopen2(
+    locationID,
+    name,
+    hdf5.H5P_DEFAULT
+    );
+
+  local dataset = hdf5.HDF5DataSet(self, datasetID)
+  local dataspaceID = dataset._dataspaceID
+
+  -- Extend the dataset
+  local tensorSize = tensor:size():totable()
+  local originalSize = dataset:dataspaceSize()
+  local newSize = dataset:dataspaceSize()
+  newSize[1] = originalSize[1] + tensorSize[1]
+
+  local newSize_h = convertSize(newSize)
+
+  status = hdf5.C.H5Dset_extent(datasetID, newSize_h)
+  dataspaceID = dataset:_refresh_dataspace() -- http://www.hdfgroup.org/HDF5/doc/RM/RM_H5D.html#Dataset-SetExtent
+
+  if status < 0 then
+    error("Error extending data " .. name .. " to " .. tostring(self))
+  end
+
+  -- build the offset
+  local offset = {originalSize[1]}
+  for k = 1, (tensor:nDimension() - 1) do
+    table.insert(offset, k + 1, 0)
+  end
+
+  local offset_h = convertSize(offset)
+  local stride_h = null
+  local count_h = convertSize(tensorSize)
+
+  -- Select a hyperslab in extended portion of dataset
+  status = hdf5.C.H5Sselect_hyperslab(dataspaceID, hdf5.H5S_SELECT_SET, offset_h, stride_h, count_h, null);  
+
+  if status < 0 then
+    error("Error selecting hyperslab for data " .. name .. " to " .. tostring(self))
+  end
+
+  -- define a new memory space for the extension
+  -- TODO we may need to close this memspaceID explicitly
+  local memspaceID = hdf5.C.H5Screate_simple(tensor:nDimension(), convertSize(tensorSize), null);
+
+  -- write the data to the extended portion of the dataset
+  local typename = torch.typename(tensor)
+  local memoryDataType = hdf5._nativeTypeForTensorType(typename)
+  local status = hdf5.C.H5Dwrite(
+          datasetID,
+          memoryDataType,
+          memspaceID,
+          dataspaceID,
+          hdf5.H5P_DEFAULT,
+          tensor:data()
+      );
+
+  if status < 0 then
+    error("Error writing to hyperslab for data " .. name .. " to " .. tostring(self))
+  end
+
+  status = hdf5.C.H5Sclose(memspaceID)
+  if status < 0 then
+    error("Failed closing memspace when appending for " .. tostring(self))
+  end
+
+  return dataset
 end
 
 local function isTensor(data)
@@ -122,6 +215,18 @@ function HDF5Group:_writeData(locationID, name, data, options)
     elseif type(data) == 'userdata' then
         if isTensor(data) then
             return self:_writeDataSet(locationID, name, data, options)
+        end
+        error("torch-hdf5: writing non-Tensor userdata is not supported")
+    end
+    error("torch-hdf5: writing data of type " .. type(data) .. " is not supported")
+end
+
+function HDF5Group:_appendData(locationID, name, data, options)
+    if type(data) == 'table' then
+        error("_appendData should not be used for tables")
+    elseif type(data) == 'userdata' then
+        if isTensor(data) then
+            return self:_appendDataSet(locationID, name, data, options)
         end
         error("torch-hdf5: writing non-Tensor userdata is not supported")
     end
@@ -146,8 +251,16 @@ function HDF5Group:getOrCreateChild(name)
 end
 
 function HDF5Group:write(datapath, data, options)
-    assert(datapath and type(datapath) == 'table', "HDF5Group:write() expects table as first parameter")
-    assert(data, "HDF5Group:write() requires data as parameter")
+    self:_write_or_append("write", datapath, data, options)
+end
+
+function HDF5Group:append(datapath, data, options)
+    self:_write_or_append("append", datapath, data, options)
+end
+
+function HDF5Group:_write_or_append(method, datapath, data, options)
+    assert(datapath and type(datapath) == 'table', "HDF5Group:" .. method .. "() expects table as first parameter")
+    assert(data, "HDF5Group:" .. method .. "() requires data as parameter")
     if #datapath == 0 then
         error("HDF5Group: descended too far")
     end
@@ -159,20 +272,26 @@ function HDF5Group:write(datapath, data, options)
         for k = 1, #datapath do
             datapath[k] = datapath[k+1]
         end
-        return child:write(datapath, data, options)
+        return child[method](child, datapath, data, options)
     end
 
     if type(data) == 'table' then
         local child = self:getOrCreateChild(key)
         for k, v in pairs(data) do
-            child:write({k}, v, options)
+            child[method](child, {k}, v, options)
         end
         return
     end
 
-    hdf5._logger.debug("Writing " .. (torch.typename(data) or type(data))
+    hdf5._logger.debug(method .. " " .. (torch.typename(data) or type(data))
                        .. " as '" .. key .. "' in " .. tostring(self))
-    local child = self:_writeData(self._groupID, key, data, options)
+
+    local child
+    if method == "write" then
+      child = self:_writeData(self._groupID, key, data, options)
+    elseif method == "append" then
+      child = self:_appendData(self._groupID, key, data, options)
+    end
     if not child then
         error("HDF5Group: error writing '" .. key .. "' in " .. tostring(self))
     end

@@ -45,6 +45,11 @@ function HDF5DataSet:__init(parent, datasetID)
     hdf5._logger.debug("Initialising " .. tostring(self))
 end
 
+function HDF5DataSet:_refresh_dataspace()
+    self._dataspaceID = hdf5.C.H5Dget_space(self._datasetID)
+    return self._dataspaceID
+end
+
 function HDF5DataSet:__tostring()
     return "[HDF5DataSet " .. hdf5._describeObject(self._datasetID) .. "]"
 end
@@ -157,4 +162,10 @@ function HDF5DataSet:close()
     if status < 0 then
         error("Failed closing dataspace for " .. tostring(self))
     end
+end
+
+function HDF5DataSet:dataspaceSize()
+  local nDims = hdf5.C.H5Sget_simple_extent_ndims(self._dataspaceID)
+  local size = getDataspaceSize(nDims, self._dataspaceID)
+  return size
 end
