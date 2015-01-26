@@ -7,7 +7,7 @@ Torch support for the HDF5 Hierarchical Data Format.
 This format is fast and flexible, and is used by many scientific applications (Matlab, R, Python, etc)
 
 ]]
-require 'torch'
+local torch = require 'torch'
 
 hdf5 = {}
 

@@ -1,4 +1,4 @@
-require 'torch'
+local torch = require 'torch'
 local path = require 'pl.path'
 local stringx = require 'pl.stringx'
 local bit = require 'bit'

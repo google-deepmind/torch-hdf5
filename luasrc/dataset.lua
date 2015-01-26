@@ -1,4 +1,4 @@
-require "torch"
+local torch = require "torch"
 
 local HDF5DataSet = torch.class("hdf5.HDF5DataSet")
 
