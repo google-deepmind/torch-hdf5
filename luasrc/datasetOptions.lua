@@ -3,9 +3,10 @@
 Object for specifying HDF5 options to use with a dataset.
 
 ]]
+require 'torch'
+local stringx = require 'pl.stringx'
 
 local DataSetOptions, parent = torch.class("hdf5.DataSetOptions")
-local stringx = require 'pl.stringx'
 
 --[[ Constructor. No parameters.
 

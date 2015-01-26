@@ -1,3 +1,4 @@
+require 'torch'
 local stringx = require 'pl.stringx'
 local ffi = require 'ffi'
 
