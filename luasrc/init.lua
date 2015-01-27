@@ -7,6 +7,8 @@ Torch support for the HDF5 Hierarchical Data Format.
 This format is fast and flexible, and is used by many scientific applications (Matlab, R, Python, etc)
 
 ]]
+local torch = require 'torch'
+
 hdf5 = {}
 
 local function log(msg)

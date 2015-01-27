@@ -1,3 +1,4 @@
+local torch = require 'torch'
 local ffi = require 'ffi'
 local bit = require 'bit'
 local stringx = require 'pl.stringx'

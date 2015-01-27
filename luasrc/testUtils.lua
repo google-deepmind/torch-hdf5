@@ -1,5 +1,7 @@
+local torch = require 'torch'
 local stringx = require 'pl.stringx'
 local dir = require 'pl.dir'
+
 hdf5._testUtils = {}
 
 function hdf5._testUtils.withTmpDir(func)

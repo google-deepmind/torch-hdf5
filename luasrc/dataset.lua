@@ -1,3 +1,5 @@
+local torch = require "torch"
+
 local HDF5DataSet = torch.class("hdf5.HDF5DataSet")
 
 --[[ Get the sizes and max sizes of an HDF5 dataspace, returning them in Lua tables ]]
