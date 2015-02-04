@@ -19,7 +19,11 @@ Example:
 Returns: new DataSetOptions object
 ]]
 function DataSetOptions:__init()
-    self._creationProperties = hdf5.C.H5Pcreate(hdf5.C.H5P_CLS_DATASET_CREATE_ID_g)
+    if hdf5.version[1] >= 1 and hdf5.version[2] >= 8 and hdf5.version[3] >= 14 then
+       self._creationProperties = hdf5.C.H5Pcreate(hdf5.C.H5P_CLS_DATASET_CREATE_ID_g)
+    else
+       self._creationProperties = hdf5.C.H5Pcreate(hdf5.C.H5P_CLS_DATASET_CREATE_g)
+    end
     self._chunking = nil
 end
 
