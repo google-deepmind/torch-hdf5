@@ -128,7 +128,7 @@ function HDF5Group:_writeTensorToDataSet(datasetID, tensor)
             hdf5.H5S_ALL,
             hdf5.H5S_ALL,
             hdf5.H5P_DEFAULT,
-            tensor:data()
+            tensor:contiguous():data()
         );
     return status
 end

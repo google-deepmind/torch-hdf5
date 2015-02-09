@@ -88,4 +88,13 @@ function myTests:testDoubleTensor()
     tester:assertTensorEq(got, testData, 1e-32, "Data read does not match data written!")
 end
 
+function myTests:testNonContiguous()
+    local k = 0
+    local testData = torch.DoubleTensor(4, 6):apply(function() k = k + math.pi; return k end)
+    testData:div(7)
+    testData = testData:t()
+    local got = writeAndReread(testData)
+    tester:assertTensorEq(got, testData, 1e-32, "Data read does not match data written!")
+end
+
 return tester:add(myTests):run()
