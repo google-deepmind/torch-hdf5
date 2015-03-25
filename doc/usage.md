@@ -82,6 +82,8 @@ Alternative libraries for R include **'h5r'** and **'ncdf4'**.
 
 ## More advanced usage
 
+### Compression, chunking, and other options
+
 You can optionally pass a `DataSetOptions` object to specify how you want data to be written:
 
     require 'hdf5'
@@ -91,6 +93,17 @@ You can optionally pass a `DataSetOptions` object to specify how you want data t
     options:setDeflate()
     myFile:write('/path/to/data', torch.rand(500, 500), options)
     myFile:close()
+
+### Partial reading
+
+You can read from a dataset without loading the whole thing at once:
+
+    local myFile = hdf5.open('/path/to/read.h5','r')
+    -- Specify the range for each dimension of the dataset.
+    local data = f:read("data"):partial({start1, end1}, {start2, end2})
+    f:close()
+    
+Note that, for efficiency, hdf5 may still load (but not return) more than just the piece you ask for - depending on what options the file was written with. For example, if the dataset is chunked, it should just load the chunks that overlap with the part you ask for.
 
 ## Command-line
 
