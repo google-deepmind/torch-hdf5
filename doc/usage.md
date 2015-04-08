@@ -100,10 +100,26 @@ You can read from a dataset without loading the whole thing at once:
 
     local myFile = hdf5.open('/path/to/read.h5','r')
     -- Specify the range for each dimension of the dataset.
-    local data = f:read("data"):partial({start1, end1}, {start2, end2})
-    f:close()
+    local data = f:read('/path/to/data'):partial({start1, end1}, {start2, end2})
+	myFile:close()
     
-Note that, for efficiency, hdf5 may still load (but not return) more than just the piece you ask for - depending on what options the file was written with. For example, if the dataset is chunked, it should just load the chunks that overlap with the part you ask for.
+	Note that, for efficiency, hdf5 may still load (but not return) more than just the piece you ask for - depending on what options the file was written with. For example, if the dataset is chunked, it should just load the chunks that overlap with the part you ask for.
+
+### Size of the data
+
+Getting the size of the dataset without loading the data:
+	
+	local myFile = hdf5.open('/path/to/read.h5','r')
+	dim = myFile:dataspaceSize('/path/to/data')
+    myFile:close()
+
+### Tensor Type of the data
+
+Checking the type of torch.Tensor without loading the data:
+	
+	local myFile = hdf5.open('/path/to/read.h5','r')
+	factory = myFile:getTensorFactory('/path/to/data')
+    myFile:close()
 
 ## Command-line
 
