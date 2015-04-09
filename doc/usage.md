@@ -110,7 +110,7 @@ Note that, for efficiency, hdf5 may still load (but not return) more than just t
 Getting the size of the dataset without loading the data:
 	
     local myFile = hdf5.open('/path/to/read.h5','r')
-    local dim = myFile:dataspaceSize('/path/to/data')
+    local dim = myFile:read('/path/to/data'):dataspaceSize()
     myFile:close()
 
 ### Tensor Type of the data
@@ -118,7 +118,7 @@ Getting the size of the dataset without loading the data:
 Checking the type of torch.Tensor without loading the data:
 	
     local myFile = hdf5.open('/path/to/read.h5','r')
-    local factory = myFile:getTensorFactory('/path/to/data')
+    local factory = myFile:read('/path/to/data'):getTensorFactory()
     myFile:close()
 
 ## Command-line
