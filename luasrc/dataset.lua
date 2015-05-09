@@ -149,10 +149,11 @@ function HDF5DataSet:partial(...)
     -- Read data into the tensor
     local dataPtr = tensor:data()
     status = hdf5.C.H5Dread(self._datasetID, nativeType, tensorDataspace, self._dataspaceID, hdf5.H5P_DEFAULT, dataPtr)
-    if status < 0 then
-        error("HDF5DataSet:partial() - failed reading data from " .. tostring(self))
-    end
-    -- TODO delete tensor dataspace
+    -- delete tensor dataspace
+    local dataspace_status = hdf5.C.H5Sclose(tensorDataspace) 
+
+    assert(status >=0, "HDF5DataSet:partial() - failed reading data from " .. tostring(self))
+    assert(dataspace_status >= 0, "HDF5DataSet:partial() - error closing tensor dataspace for " .. tostring(self))
     return tensor
 end
 
