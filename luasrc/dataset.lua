@@ -74,6 +74,7 @@ function HDF5DataSet:all()
     if status < 0 then
         error("HDF5DataSet:all() - failed reading data from " .. tostring(self))
     end
+    hdf5.C.H5Tclose(nativeType)
 
     return tensor
 end
@@ -82,6 +83,7 @@ function HDF5DataSet:getTensorFactory()
     local typeID = hdf5.C.H5Dget_type(self._datasetID)
     local nativeType = hdf5.C.H5Tget_native_type(typeID, hdf5.C.H5T_DIR_ASCEND)
     local torchType = hdf5._getTorchType(typeID)
+    hdf5.C.H5Tclose(typeID)
     if not torchType then
         error("Could not find torch type for native type " .. tostring(nativeType))
     end
@@ -154,6 +156,7 @@ function HDF5DataSet:partial(...)
 
     assert(status >=0, "HDF5DataSet:partial() - failed reading data from " .. tostring(self))
     assert(dataspace_status >= 0, "HDF5DataSet:partial() - error closing tensor dataspace for " .. tostring(self))
+    hdf5.C.H5Tclose(nativeType)
     return tensor
 end
 
