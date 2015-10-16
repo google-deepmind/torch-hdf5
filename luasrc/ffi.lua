@@ -231,6 +231,7 @@ hdf5.H5S_SELECT_SET = 0
 local fileTypeMap = {
     ["torch.ByteTensor"] = hdf5.h5t.STD_U8LE,
     ["torch.CharTensor"] = hdf5.h5t.STD_I8LE,
+    ["torch.ShortTensor"] = hdf5.h5t.STD_I16LE,
     ["torch.IntTensor"] = hdf5.h5t.STD_I32LE,
     ["torch.LongTensor"] = hdf5.h5t.STD_I64LE,
     ["torch.FloatTensor"] = hdf5.h5t.IEEE_F32LE,
@@ -245,6 +246,7 @@ end
 local nativeTypeMap = {
     ["torch.ByteTensor"] = hdf5.h5t.NATIVE_UCHAR,
     ["torch.CharTensor"] = hdf5.h5t.NATIVE_SCHAR,
+    ["torch.ShortTensor"] = hdf5.h5t.NATIVE_SHORT,
     ["torch.IntTensor"] = hdf5.h5t.NATIVE_INT,
     ["torch.LongTensor"] = hdf5.h5t.NATIVE_LONG,
     ["torch.FloatTensor"] = hdf5.h5t.NATIVE_FLOAT,
@@ -309,6 +311,9 @@ function hdf5._getTorchType(typeID)
     if className == 'INTEGER' then
         if size == 1 then
             return 'torch.ByteTensor'
+        end
+        if size == 2 then
+            return 'torch.ShortTensor'
         end
         if size == 4 then
             return 'torch.IntTensor'
@@ -396,4 +401,3 @@ function hdf5._deflateAvailable()
     end
     return true
 end
-
