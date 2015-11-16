@@ -65,6 +65,13 @@ function myTests:testIntTensor()
     tester:assert(intTensorEqual("torch.IntTensor", got, testData), "Data read does not match data written!")
 end
 
+function myTests:testShortTensor()
+    local k = 0
+    local testData = torch.ShortTensor(4, 6):apply(function() k = k + 1; return k end)
+    local got = writeAndReread(testData)
+    tester:assert(intTensorEqual("torch.ShortTensor", got, testData), "Data read does not match data written!")
+end
+
 function myTests:testLongTensor()
     local k = 0
     local testData = torch.LongTensor(4, 6):apply(function() k = k + 1; return k end)
