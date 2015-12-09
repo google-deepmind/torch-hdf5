@@ -148,3 +148,7 @@ See [this page](http://www.hdfgroup.org/HDF5/doc/RM/Tools.html) for many more HD
 ## Elsewhere
 
 Libraries for many other languages and tools exist, too. See [this list](http://en.wikipedia.org/wiki/Hierarchical_Data_Format#Interfaces) for more information.
+
+## Thread-safety
+
+If you want to use HDF5 from multiple threads, you will need a thread-safe build of the underlying HDF5 library. Otherwise, you will get random crashes. See the [HDF5 docs](https://www.hdfgroup.org/hdf5-quest.html#tsafe) for how to build a thread-safe version.
