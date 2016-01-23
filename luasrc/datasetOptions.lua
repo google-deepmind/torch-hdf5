@@ -6,6 +6,9 @@ Object for specifying HDF5 options to use with a dataset.
 local torch = require 'torch'
 local stringx = require 'pl.stringx'
 
+-- Lua 5.2 compatibility
+local unpack = unpack or table.unpack
+
 local DataSetOptions, parent = torch.class("hdf5.DataSetOptions")
 
 --[[ Constructor. No parameters.
