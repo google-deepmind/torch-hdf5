@@ -1,5 +1,8 @@
 local torch = require "torch"
 
+-- Lua 5.2 compatibility
+local unpack = unpack or table.unpack
+
 local HDF5DataSet = torch.class("hdf5.HDF5DataSet")
 
 --[[ Get the sizes and max sizes of an HDF5 dataspace, returning them in Lua tables ]]
@@ -152,7 +155,7 @@ function HDF5DataSet:partial(...)
     local dataPtr = tensor:data()
     status = hdf5.C.H5Dread(self._datasetID, nativeType, tensorDataspace, self._dataspaceID, hdf5.H5P_DEFAULT, dataPtr)
     -- delete tensor dataspace
-    local dataspace_status = hdf5.C.H5Sclose(tensorDataspace) 
+    local dataspace_status = hdf5.C.H5Sclose(tensorDataspace)
 
     assert(status >=0, "HDF5DataSet:partial() - failed reading data from " .. tostring(self))
     assert(dataspace_status >= 0, "HDF5DataSet:partial() - error closing tensor dataspace for " .. tostring(self))

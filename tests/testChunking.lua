@@ -11,6 +11,9 @@ local tester = totem.Tester()
 local myTests = {}
 local testUtils = hdf5._testUtils
 
+-- Lua 5.2 compatibility
+local unpack = unpack or table.unpack
+
 function myTests:testChunked()
     testUtils.withTmpDir(function(tmpDir)
         local h5filename = path.join(tmpDir, "foo.h5")
