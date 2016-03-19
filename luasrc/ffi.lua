@@ -323,7 +323,7 @@ function hdf5._getTorchType(typeID)
         end
         error("Cannot support reading integer data with size = " .. size .. " bytes")
     elseif className == 'FLOAT' then
-        if size == 4 then
+        if size == 2 or size == 4 then
             return 'torch.FloatTensor'
         end
         if size == 8 then
