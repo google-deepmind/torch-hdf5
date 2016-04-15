@@ -333,6 +333,8 @@ function hdf5._getTorchType(typeID)
             return 'torch.DoubleTensor'
         end
         error("Cannot support reading float data with size = " .. size .. " bytes")
+    elseif className == 'STRING' then
+        return 'torch.CharTensor'
 
     else
         error("Reading data of class " .. tostring(className) .. "(" .. typeID .. ") is unsupported")
