@@ -42,14 +42,12 @@ local function intTensorEqual(typename, a, b)
     return a:add(-b):apply(function(x) return math.abs(tonumber(x)) end):sum() == 0
 end
 
---[[ Not supported yet
 function myTests:testCharTensor()
     local k = 0
     local testData = torch.CharTensor(4, 6):apply(function() k = k + 1; return k end)
     local got = writeAndReread(testData)
     tester:assert(intTensorEqual("torch.CharTensor", got, testData), "Data read does not match data written!")
 end
-]]
 
 function myTests:testByteTensor()
     local k = 0

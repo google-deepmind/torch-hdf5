@@ -111,6 +111,8 @@ addConstants('h5t', {
     'VLEN',
     'ARRAY',
     'NCLASSES',
+    'SGN_NONE',
+    'SGN_2',
 }, addH5t)
 local function addG(x) return addH5t(x) .. "_g" end
 
@@ -310,7 +312,8 @@ function hdf5._getTorchType(typeID)
     local size = tonumber(hdf5.C.H5Tget_size(typeID))
     if className == 'INTEGER' then
         if size == 1 then
-            return 'torch.ByteTensor'
+            local signed = hdf5.C.H5Tget_sign(typeID) == hdf5.h5t.SGN_2
+            return signed and 'torch.CharTensor' or 'torch.ByteTensor'
         end
         if size == 2 then
             return 'torch.ShortTensor'
