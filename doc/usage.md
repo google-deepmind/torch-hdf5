@@ -14,6 +14,8 @@
     cd torch-hdf5
     luarocks make hdf5-0-0.rockspec
 
+Note: if `luarocks make` fails with an unsatisfied dependency, the luarocks being used is likely not the one provided by torch. Try using `[torch install directory]/install/bin/luarocks` instead.
+
 ### Ubuntu < 13.04
 
     sudo apt-get install libhdf5-serial-dev hdf5-tools
