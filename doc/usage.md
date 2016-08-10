@@ -10,7 +10,7 @@
 
     brew tap homebrew/science
     brew install hdf5
-    git clone git@github.com:deepmind/torch-hdf5.git
+    git clone https://github.com/deepmind/torch-hdf5
     cd torch-hdf5
     luarocks make hdf5-0-0.rockspec
 
@@ -19,14 +19,14 @@ Note: if `luarocks make` fails with an unsatisfied dependency, the luarocks bein
 ### Ubuntu < 13.04
 
     sudo apt-get install libhdf5-serial-dev hdf5-tools
-    git clone git@github.com:deepmind/torch-hdf5.git
+    git clone https://github.com/deepmind/torch-hdf5
     cd torch-hdf5
     luarocks make hdf5-0-0.rockspec
 
 ### Ubuntu >= 13.04
 
     sudo apt-get install libhdf5-serial-dev hdf5-tools
-    git clone git@github.com:deepmind/torch-hdf5.git
+    git clone https://github.com/deepmind/torch-hdf5
     cd torch-hdf5
     luarocks make hdf5-0-0.rockspec LIBHDF5_LIBDIR="/usr/lib/x86_64-linux-gnu/"
 
