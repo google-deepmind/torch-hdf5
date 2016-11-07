@@ -41,7 +41,7 @@ local function loadHDF5Header(includePath)
     if not path.isfile(headerPath) then
         error("Error: unable to locate HDF5 header file at " .. headerPath)
     end
-    local process = io.popen("gcc -E " .. headerPath) -- TODO pass -I
+    local process = io.popen("gcc -D '_Nullable=' -E " .. headerPath) -- TODO pass -I
     local contents = process:read("*all")
     process:close()
 
