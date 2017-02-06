@@ -41,12 +41,12 @@ local function createTensorDataspace(tensor)
     return dataspaceID
 end
 
-function HDF5DataSet:__init(parent, datasetID)
+function HDF5DataSet:__init(parent, datasetID, dataspaceID)
     assert(parent)
     assert(datasetID)
     self._parent = parent
     self._datasetID = datasetID
-    self._dataspaceID = hdf5.C.H5Dget_space(self._datasetID)
+    self._dataspaceID = dataspaceID or hdf5.C.H5Dget_space(self._datasetID)
     hdf5._logger.debug("Initialising " .. tostring(self))
 end
 
