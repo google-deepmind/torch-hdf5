@@ -22,6 +22,21 @@ function HDF5File:__init(filename, fileID)
     end
 end
 
+function HDF5File.__write(object, self) 
+    local var = {}
+    for k,v in pairs(object) do 
+        var[k] = v 
+    end
+    self:writeObject(var, torch.typename(object), hook)
+end
+
+function HDF5File.__read(object, self, versionNumber)
+    local var = self:readObject()
+    for k,v in pairs(var) do 
+        object[k] = v 
+    end
+end
+
 function HDF5File:filename()
     return self._filename
 end

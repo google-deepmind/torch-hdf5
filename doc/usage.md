@@ -123,6 +123,32 @@ Checking the type of torch.Tensor without loading the data:
     local factory = myFile:read('/path/to/data'):getTensorFactory()
     myFile:close()
 
+### Reading HDF5 file from multiple threads 
+
+If you want to use HDF5 from multiple threads, you will need a thread-safe build of the underlying HDF5 library. Otherwise, you will get random crashes. See the [HDF5 docs](https://support.hdfgroup.org/ftp/HDF5/current18/src/unpacked/release_docs/INSTALL) for how to build a thread-safe version.
+
+If you want to do this from torch you will also need to install torch [threads](https://github.com/torch/threads). Then you can
+
+        local mainfile = hdf5.open('/path/to/read.h5','r')
+        local nthreads = 2
+        local data = nil
+        local worker = function(h5file)
+            torch.setnumthreads(1)
+            print(__threadid)
+            return h5file:read("data" .. __threadid):all()
+        end
+        local pool = threads.Threads(nthreads, function(threadid) require'torch' require'hdf5'end)
+        pool:specific(true)
+
+        for i=1,nthreads do
+            pool:addjob(i, worker, function(_data) data = _data end, mainfile)
+        end
+        for i=1,nthreads do
+            pool:dojob()
+            print(data:size(1)==10)
+        end
+        mainfile:close()
+
 ## Command-line
 
 There are also a number of handy command-line tools.
@@ -150,7 +176,3 @@ See [this page](http://www.hdfgroup.org/HDF5/doc/RM/Tools.html) for many more HD
 ## Elsewhere
 
 Libraries for many other languages and tools exist, too. See [this list](http://en.wikipedia.org/wiki/Hierarchical_Data_Format#Interfaces) for more information.
-
-## Thread-safety
-
-If you want to use HDF5 from multiple threads, you will need a thread-safe build of the underlying HDF5 library. Otherwise, you will get random crashes. See the [HDF5 docs](https://www.hdfgroup.org/hdf5-quest.html#tsafe) for how to build a thread-safe version.
