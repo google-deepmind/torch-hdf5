@@ -69,6 +69,21 @@ function HDF5Group:__init(parent, groupID)
     callback:free()
 end
 
+function HDF5Group.__write(object, self) 
+    local var = {}
+    for k,v in pairs(object) do 
+        var[k] = v 
+    end
+    self:writeObject(var, torch.typename(object), hook)
+end
+
+function HDF5Group.__read(object, self, versionNumber)
+    local var = self:readObject()
+    for k,v in pairs(var) do 
+        object[k] = v 
+    end
+end
+
 function HDF5Group:__tostring()
     return "[HDF5Group " .. self._groupID .. " " .. hdf5._getObjectName(self._groupID) .. "]"
 end
