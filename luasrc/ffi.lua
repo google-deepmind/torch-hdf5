@@ -9,8 +9,7 @@ local function loadHDF5Library(libraryPaths)
     local hdf5LibPath
     for _, libPath in ipairs(libraries) do
         local basename = path.basename(libPath)
-        local name, ext = path.splitext(basename)
-        if name == 'libhdf5' then
+        if string.match(basename, '^libhdf5') then
             hdf5LibPath = libPath
             break
         end
@@ -33,14 +32,23 @@ local function loadHDF5Library(libraryPaths)
     return hdf5lib
 end
 
-local function loadHDF5Header(includePath)
+local function loadHDF5Header(includePaths)
 
     -- Pass the header file through the C preprocessor once
-    local headerPath = path.join(includePath, "hdf5.h")
-    hdf5._logger.debug("Processing header " .. headerPath)
-    if not path.isfile(headerPath) then
-        error("Error: unable to locate HDF5 header file at " .. headerPath)
+    local paths = stringx.split(includePaths, ";")
+    local headerPath
+    for _, incPath in ipairs(paths) do
+        local p = path.join(incPath, "hdf5.h")
+        if path.isfile(p) then
+            headerPath = p
+            break
+        end
     end
+
+    if not headerPath then
+        error("Error: unable to locate HDF5 header file in " .. includePaths)
+    end
+    hdf5._logger.debug("Processing header " .. headerPath)
     local process = io.popen("gcc -E " .. headerPath) -- TODO pass -I
     local contents = process:read("*all")
     process:close()
