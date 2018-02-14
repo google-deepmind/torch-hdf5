@@ -41,7 +41,7 @@ local function loadHDF5Header(includePath)
     if not path.isfile(headerPath) then
         error("Error: unable to locate HDF5 header file at " .. headerPath)
     end
-    local process = io.popen("gcc -E " .. headerPath) -- TODO pass -I
+    local process = io.popen("gcc -D '_Nullable=' -E " .. headerPath) -- TODO pass -I
     local contents = process:read("*all")
     process:close()
 
@@ -323,7 +323,7 @@ function hdf5._getTorchType(typeID)
         end
         error("Cannot support reading integer data with size = " .. size .. " bytes")
     elseif className == 'FLOAT' then
-        if size == 4 then
+        if size == 2 or size == 4 then
             return 'torch.FloatTensor'
         end
         if size == 8 then
