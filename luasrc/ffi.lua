@@ -41,9 +41,12 @@ local function loadHDF5Header(includePath)
     if not path.isfile(headerPath) then
         error("Error: unable to locate HDF5 header file at " .. headerPath)
     end
-    local process = io.popen("gcc -E " .. headerPath .. " -I " .. includePath) -- TODO detect and handle failure to parse
+    local process = io.popen("gcc -E " .. headerPath .. " -I " .. includePath)
     local contents = process:read("*all")
-    process:close()
+    local success, errorMsg, returnCode = process:close()
+    if returnCode ~= 0 then
+        error("Error: unable to parse HDF5 header file at " .. headerPath)
+    end
 
     -- Strip out the extra junk that GCC returns
     local cdef = ""
