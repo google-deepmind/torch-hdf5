@@ -55,7 +55,7 @@ local function loadHDF5Header(includePath)
       include_opts = include_opts .. " -I" .. dir
     end
 
-    local process = io.popen("gcc -E " .. headerPath .. include_opts)
+    local process = io.popen("gcc -D '_Nullable=' -E " .. headerPath .. include_opts)
     local contents = process:read("*all")
     local success, errorMsg, returnCode = process:close()
     if returnCode ~= 0 then
