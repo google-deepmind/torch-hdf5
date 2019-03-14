@@ -36,12 +36,26 @@ end
 local function loadHDF5Header(includePath)
 
     -- Pass the header file through the C preprocessor once
-    local headerPath = path.join(includePath, "hdf5.h")
+    local headerPath = nil
+    -- Some hdf5 installations (e.g. brew's 1.10) are going to have several include dirs, search them all
+    local includes = {}
+    for dir in string.gmatch(includePath, '[^;]+') do
+        local headerCandidate = path.join(dir, "hdf5.h")
+        if path.isfile(headerCandidate) then
+            headerPath = headerCandidate
+        end
+        table.insert(includes, dir)
+    end
     hdf5._logger.debug("Processing header " .. headerPath)
-    if not path.isfile(headerPath) then
+    if headerPath == nil or not path.isfile(headerPath) then
         error("Error: unable to locate HDF5 header file at " .. headerPath)
     end
-    local process = io.popen("gcc -E " .. headerPath .. " -I " .. includePath)
+    local include_opts = ""
+    for _,dir in ipairs(includes) do
+      include_opts = include_opts .. " -I" .. dir
+    end
+
+    local process = io.popen("gcc -D '_Nullable=' -E " .. headerPath .. include_opts)
     local contents = process:read("*all")
     local success, errorMsg, returnCode = process:close()
     if returnCode ~= 0 then
