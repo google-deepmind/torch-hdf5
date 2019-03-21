@@ -140,10 +140,12 @@ function hdf5.HDF5File.open(filename, mode)
     end
     local function createFunc(filename, access)
         local fileID = hdf5.C.H5Fcreate(filename, access, hdf5.H5P_DEFAULT, hdf5.H5P_DEFAULT)
+		fileID = tonumber(fileID) --HDF5File:__init wants a "number"
         return hdf5.HDF5File(filename, fileID)
     end
     local function openFunc(filename, access)
         local fileID = hdf5.C.H5Fopen(filename, access, hdf5.H5P_DEFAULT)
+		fileID = tonumber(fileID) --HDF5File:__init wants a "number"
         return hdf5.HDF5File(filename, fileID)
     end
     if mode == 'r' then

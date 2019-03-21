@@ -85,7 +85,7 @@ function HDF5Group.__read(object, self, versionNumber)
 end
 
 function HDF5Group:__tostring()
-    return "[HDF5Group " .. self._groupID .. " " .. hdf5._getObjectName(self._groupID) .. "]"
+    return "[HDF5Group " .. tostring(self._groupID) .. " " .. hdf5._getObjectName(self._groupID) .. "]"
 end
 
 function HDF5Group:_writeDataSet(locationID, name, tensor, options)
