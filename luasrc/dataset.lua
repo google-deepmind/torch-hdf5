@@ -6,7 +6,7 @@ local unpack = unpack or table.unpack
 local HDF5DataSet = torch.class("hdf5.HDF5DataSet")
 
 --[[ Get the sizes and max sizes of an HDF5 dataspace, returning them in Lua tables ]]
-local function getDataspaceSize(nDims, spaceID)
+local function getDataspaceSize(nDims, spaceID, datasetID)
     local size_t = hdf5.ffi.typeof("hsize_t[" .. nDims .. "]")
     local dims = size_t()
     local maxDims = size_t()
@@ -19,6 +19,12 @@ local function getDataspaceSize(nDims, spaceID)
         size[k] = tonumber(dims[k-1])
         maxSize[k] = tonumber(maxDims[k-1])
     end
+
+    local typeID = hdf5.C.H5Dget_type(datasetID)
+    if hdf5._datatypeName(typeID) == 'STRING' then
+      size[nDims+1] = tonumber(hdf5.C.H5Tget_size(typeID))
+    end
+
     return size, maxSize
 end
 
@@ -65,7 +71,7 @@ function HDF5DataSet:all()
 
     -- Create a new tensor of the correct type and size
     local nDims = hdf5.C.H5Sget_simple_extent_ndims(self._dataspaceID)
-    local size = getDataspaceSize(nDims, self._dataspaceID)
+    local size = getDataspaceSize(nDims, self._dataspaceID, self._datasetID)
     local factory, nativeType = self:getTensorFactory()
 
     local tensor = factory():resize(unpack(size))
@@ -177,6 +183,6 @@ end
 
 function HDF5DataSet:dataspaceSize()
   local nDims = hdf5.C.H5Sget_simple_extent_ndims(self._dataspaceID)
-  local size = getDataspaceSize(nDims, self._dataspaceID)
+  local size = getDataspaceSize(nDims, self._dataspaceID, self._datasetID)
   return size
 end
